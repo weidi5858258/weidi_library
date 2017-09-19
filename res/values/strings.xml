@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">weidi_library</string>
+
+    <string name="picker_sure">确定</string>
+    <string name="picker_cancel">取消</string>
+    <string name="picker_title">选择时间</string>
+    <string name="picker_year">年</string>
+    <string name="picker_month">月</string>
+    <string name="picker_day">日</string>
+    <string name="picker_hour">时</string>
+    <string name="picker_minute">分</string>
+
+    <string name="generate_qr_code">生成二维码</string>
+    <string name="generate_barcode">生成条形码</string>
+    <string name="scan_code">扫描</string>
+    <string name="scan_text">将二维码放入框内, 即可自动扫描</string>
+
+    <!-- permission request -->
+    <string name="dialog_title_help">Help</string>
+    <string name="dialog_content">This application can\'t work without required permissions. Please grant the permissions in Settings.</string>
+    <string name="dialog_button_quit">Quit</string>
+    <string name="dialog_button_settings">Settings</string>
+</resources>

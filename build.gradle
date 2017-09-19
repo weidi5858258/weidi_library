@@ -1,0 +1,92 @@
+//apply plugin: 'com.android.library'
+
+buildscript {
+    System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.3'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs.add('-Xbootclasspath/p:\\libs\\services.jar')
+        }
+    }
+}
+
+apply plugin: 'com.android.application'
+
+//////////////////////////The above parts do not modify//////////////////////////
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 25
+        signingConfig signingConfigs.debug
+//        multiDexEnabled true
+    }
+    packagingOptions {
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE.txt'
+    }
+    sourceSets {
+        main {
+            def folder = './'
+            def srcFolder = [folder + 'src']
+            def resFolder = [folder + 'res']
+            def libsFolder = [folder + 'libs']
+            def assetsFolder = [folder + 'assets']
+            def aidlFolder = [folder, 'aidl']
+            def jniFolder = [srcFolder + 'jni']
+
+            manifest.srcFile file('./AndroidManifest.xml')
+            java.srcDirs = srcFolder
+            res.srcDirs = resFolder
+            jniLibs.srcDirs = libsFolder
+            assets.srcDirs = assetsFolder
+            aidl.srcDirs = aidlFolder
+            jni.srcDirs = jniFolder
+
+        }// main
+
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+    }// sourceSets
+
+    sourceSets.main.jni.srcDirs = []
+    sourceSets.main.jniLibs.srcDir 'libs'
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+    productFlavors {
+    }
+}// android
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'lib')
+    compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'com.android.support:support-v4:25.3.1'
+    // compile files('libs/android-support-v4.jar')
+    compile files('libs/gson-2.3.1.jar')
+    compile files('libs/zxing.jar')
+    compile files('libs/nineoldandroids-2.4.0.jar')
+    compile files('libs/fastjson-1.2.35.jar')
+}
+
+android {
+    lintOptions {
+        abortOnError false
+    }
+}
+
