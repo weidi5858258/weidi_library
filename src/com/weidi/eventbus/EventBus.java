@@ -3,6 +3,7 @@ package com.weidi.eventbus;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,17 +28,22 @@ public class EventBus {
             mUiHandler = new Handler(Looper.getMainLooper()) {
 
                 @Override
-                public synchronized void handleMessage(Message msg) {
+                public void handleMessage(Message msg) {
+                    /*synchronized (EventBus.this) {
+                    }*/
                     if (msg == null || mClass == null) {
                         return;
                     }
 
-                    mResultObj = dispatchEvent(mClass, msg.what, msg.obj);
+                    mObjResult = dispatchEvent(mClass, msg.what, msg.obj);
                     synchronized (objLock) {
                         objLock.notifyAll();
                     }
+                    if (mResultAsyncInterface != null) {
+                        mResultAsyncInterface.onResult(mObjResult);
+                    }
 
-                    super.handleMessage(msg);
+                    // super.handleMessage(msg);
                 }
             };
         }
@@ -65,13 +71,32 @@ public class EventBus {
      3.传递的数据都在主线程中执行
      */
 
-    private static final HashMap<Object, Method> classMethodHashMap = new HashMap<Object, Method>();
-    private Object objLock = new Object();
+    private static final HashMap<Object, Method> classMethodHashMap =
+            new HashMap<Object, Method>();
+    // 属于当前对象为好，所以不设置成static
+    private final Object objLock = new Object();
     private Class mClass;
-    private Object mResultObj;
+    private Object mObjResult;
     private Message mMessage;
-    // 默认是同步,也就是说只有被调用处(即onEvent(){...})执行完了,才能在调用处继续往下走
-    private boolean mIsAsync;
+
+    // 用于异步执行后返回结果，如果有结果的话
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    private ResultAsyncInterface mResultAsyncInterface;
+
+    public interface ResultAsyncInterface {
+
+        void onResult(Object object);
+
+    }
+
+    // 用完之后赋为null
+    public EventBus setResultAsyncInterface(ResultAsyncInterface resultAsyncInterface) {
+        mResultAsyncInterface = resultAsyncInterface;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////
 
     public void init() {
         synchronized (this) {
@@ -93,15 +118,14 @@ public class EventBus {
                 method = clazz.getDeclaredMethod("onEvent", int.class, Object.class);
                 method.setAccessible(true);
             } catch (NoSuchMethodException e) {
+                Log.e(TAG, "EventBus register() : NoSuchMethodException");
                 e.printStackTrace();
             }
 
             if (method == null || classMethodHashMap == null) {
                 return;
             }
-            if (!classMethodHashMap.containsKey(object)) {
-                classMethodHashMap.put(object, method);
-            }
+            classMethodHashMap.put(object, method);
         }
     }
 
@@ -138,9 +162,29 @@ public class EventBus {
         return this;
     }
 
-    public EventBus setIsAsync(boolean isAsync) {
-        mIsAsync = isAsync;
-        return this;
+    /***
+     *
+     * @param what 消息标志
+     * @param objectData 传递的数据
+     */
+    public void postAsync(final int what, final Object objectData) {
+        if (mClass == null) {
+            throw new NullPointerException("EventBus post() : class = null");
+        }
+        if (classMethodHashMap == null || classMethodHashMap.isEmpty()) {
+            return;
+        }
+
+        Message msg = null;
+        if (mMessage != null) {
+            msg = mMessage;
+        } else {
+            msg = mUiHandler.obtainMessage();
+        }
+        msg.what = what;
+        msg.obj = objectData;
+        mMessage = msg;
+        mUiHandler.sendMessage(msg);
     }
 
     /***
@@ -148,7 +192,7 @@ public class EventBus {
      * @param what 消息标志
      * @param objectData 传递的数据 异步时返回的结果一直为null
      */
-    public Object post(final int what, final Object objectData) {
+    public Object postSync(final int what, final Object objectData) {
         if (mClass == null) {
             throw new NullPointerException("EventBus post() : class = null");
         }
@@ -168,40 +212,22 @@ public class EventBus {
             msg.obj = objectData;
             mMessage = msg;
             mUiHandler.sendMessage(msg);
-
-            if(mIsAsync){
-                return null;
-            }else{
-                synchronized (objLock) {
-                    try {
-                        objLock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            synchronized (objLock) {
+                try {
+                    objLock.wait();
+                } catch (InterruptedException e) {
+                    mObjResult = null;
+                    e.printStackTrace();
                 }
-                return mResultObj;
             }
+            return mObjResult;
         }
         // It's main thread.
-        if (mIsAsync) {
-            Message msg = null;
-            if (mMessage != null) {
-                msg = mMessage;
-            } else {
-                msg = mUiHandler.obtainMessage();
-            }
-            msg.what = what;
-            msg.obj = objectData;
-            mMessage = msg;
-            mUiHandler.sendMessage(msg);
-            return null;
-        } else {
-            return dispatchEvent(mClass, what, objectData);
-        }
+        return dispatchEvent(mClass, what, objectData);
     }
 
     /***
-     *
+     * 一般使用上面两个方法好了
      * @param clazz 向哪个类发送消息
      * @param what 消息标志
      * @param objectData 传递的数据
@@ -221,7 +247,7 @@ public class EventBus {
 
                     @Override
                     public void run() {
-                        mResultObj = dispatchEvent(clazz, what, objectData);
+                        mObjResult = dispatchEvent(clazz, what, objectData);
                         synchronized (objLock) {
                             objLock.notifyAll();
                         }
@@ -233,10 +259,11 @@ public class EventBus {
                 try {
                     objLock.wait();
                 } catch (InterruptedException e) {
+                    mObjResult = null;
                     e.printStackTrace();
                 }
             }
-            return mResultObj;
+            return mObjResult;
         }
 
         return dispatchEvent(clazz, what, objectData);
@@ -245,14 +272,26 @@ public class EventBus {
     private Object dispatchEvent(Class clazz, int what, Object objectData) {
         String sampleName = clazz.getSimpleName();
 
-        Iterator<Map.Entry<Object, Method>> iter = classMethodHashMap.entrySet().iterator();
+        Iterator<Map.Entry<Object, Method>> iter = null;
+        synchronized (EventBus.this) {
+            iter = classMethodHashMap.entrySet().iterator();
+        }
+        if (iter == null) {
+            return null;
+        }
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             Object keyObject = entry.getKey();
             if (keyObject.getClass().getSimpleName().equals(sampleName)) {
                 Method method = (Method) entry.getValue();
                 try {
-                    return method.invoke(keyObject, what, objectData);
+                    /***
+                     这里可能还有bug。就是keyObject是Activity或者Fragment时，退出这些组件后
+                     如果再调用下面的代码，就有可能报异常。
+                     */
+                    if (method != null) {
+                        return method.invoke(keyObject, what, objectData);
+                    }
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {

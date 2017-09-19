@@ -1,4 +1,4 @@
-//apply plugin: 'com.android.library'
+apply plugin: 'com.android.library'
 
 buildscript {
     System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
@@ -21,7 +21,7 @@ allprojects {
     }
 }
 
-apply plugin: 'com.android.application'
+//apply plugin: 'com.android.application'
 
 //////////////////////////The above parts do not modify//////////////////////////
 
@@ -76,6 +76,7 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'lib')
     compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     // compile files('libs/android-support-v4.jar')
     compile files('libs/gson-2.3.1.jar')
