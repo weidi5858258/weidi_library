@@ -48,8 +48,6 @@ public class EventBus {
                     }
 
                     Log.i(TAG, "EventBus handleMessage() end");
-
-                    // super.handleMessage(msg);
                 }
             };
         }
@@ -135,9 +133,13 @@ public class EventBus {
     }
 
     /***
+     * 同步,有结果返回
+     * 这里"同步"的意思是A处调用postSync()方法后
+     * 只有等到消息接收处的代码执行完并返回结果了,
+     * 才会再继续执行A处下面的代码
      *
      * @param what 消息标志
-     * @param objectData 传递的数据 异步时返回的结果一直为null
+     * @param objectData 传递的数据
      */
     public synchronized Object postSync(
             final Class clazz, final int what, final Object objectData) {
@@ -162,6 +164,49 @@ public class EventBus {
             myMessage.clazz = clazz;
             myMessage.what = what;
             myMessage.obj = objectData;
+            msg.obj = myMessage;
+            mMessage = msg;
+            mUiHandler.sendMessage(msg);
+            Log.i(TAG, "EventBus postSync() sendMessage()");
+            synchronized (objLock) {
+                try {
+                    objLock.wait();
+                } catch (InterruptedException e) {
+                    mObjResult = null;
+                    e.printStackTrace();
+                }
+            }
+            return mObjResult;
+        }
+        // It's main thread.
+        return dispatchEvent(clazz, what, objectData);
+    }
+
+    public synchronized Object postSync(
+            final Class clazz, final int what, final Object objectData,
+            final AAsyncResult aAsyncResult) {
+        if (clazz == null) {
+            throw new NullPointerException("EventBus post() : class = null");
+        }
+        if (classMethodHashMap == null || classMethodHashMap.isEmpty()) {
+            return null;
+        }
+
+        // It's not main thread.
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Message msg = null;
+            if (mMessage != null) {
+                msg = Message.obtain(mMessage);
+                Log.i(TAG, "EventBus postSync() obtain(mMessage)");
+            } else {
+                msg = mUiHandler.obtainMessage();
+                Log.i(TAG, "EventBus postSync() obtainMessage()");
+            }
+            MyMessage myMessage = new MyMessage();
+            myMessage.clazz = clazz;
+            myMessage.what = what;
+            myMessage.obj = objectData;
+            myMessage.aAsyncResult = aAsyncResult;
             msg.obj = myMessage;
             mMessage = msg;
             mUiHandler.sendMessage(msg);
