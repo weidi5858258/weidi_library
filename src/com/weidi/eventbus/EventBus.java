@@ -7,6 +7,8 @@ import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -317,14 +319,15 @@ public class EventBus {
     // 下面的代码不打算使用
     //////////////////////////////////////////////////////////////////////////////////////
 
-    /*private ArrayList<EventListener> mEventListenerList = new ArrayList<EventListener>();
+    private ArrayList<EventListener> mEventListenerList = new ArrayList<EventListener>();
+
     public interface EventListener {
 
         void onEvent(int what, Object object);
 
-    }*/
+    }
 
-    /*public void register(EventListener listener) {
+    public void register(EventListener listener) {
         if (mEventListenerList != null && !mEventListenerList.contains(listener)) {
             mEventListenerList.add(listener);
         }
@@ -343,7 +346,7 @@ public class EventBus {
                 mEventListenerList.get(i).onEvent(what, object);
             }
         }
-    }*/
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////
 
