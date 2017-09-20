@@ -27,7 +27,7 @@ public class Log {
     public static void init() {
         mSwitch = true;
         try {
-            File file = new File("/data/data/com.cyanogenmod.eleven/files/artifact.log");
+            File file = new File("/data/data/com.weidi.artifact/files/artifact.log");
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
