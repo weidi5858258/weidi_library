@@ -181,6 +181,7 @@ public class EventBus {
     }
 
     /***
+     * 不需要返回结果
      *
      * @param what 消息标志
      * @param objectData 传递的数据
@@ -213,6 +214,7 @@ public class EventBus {
     }
 
     /***
+     * 需要返回结果
      *
      * @param what 消息标志
      * @param objectData 传递的数据
@@ -346,7 +348,7 @@ public class EventBus {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-
+            return;
         }
 
         public abstract void onResult(Object object);
@@ -358,6 +360,9 @@ public class EventBus {
         int what;
         Object obj;
         AAsyncResult aAsyncResult;
+
+        public MyMessage() {
+        }
 
         @Override
         public int describeContents() {
@@ -383,9 +388,6 @@ public class EventBus {
             dest.writeParcelable(this.aAsyncResult, flags);
         }
 
-        public MyMessage() {
-        }
-
         protected MyMessage(Parcel in) {
             this.clazz = (Class) in.readSerializable();
             this.what = in.readInt();
@@ -393,18 +395,19 @@ public class EventBus {
             this.aAsyncResult = in.readParcelable(AAsyncResult.class.getClassLoader());
         }
 
-        public static final Parcelable.Creator<MyMessage> CREATOR = new Parcelable
-                .Creator<MyMessage>() {
-            @Override
-            public MyMessage createFromParcel(Parcel source) {
-                return new MyMessage(source);
-            }
+        public static final Parcelable.Creator<MyMessage> CREATOR =
+                new Parcelable.Creator<MyMessage>() {
 
-            @Override
-            public MyMessage[] newArray(int size) {
-                return new MyMessage[size];
-            }
-        };
+                    @Override
+                    public MyMessage createFromParcel(Parcel source) {
+                        return new MyMessage(source);
+                    }
+
+                    @Override
+                    public MyMessage[] newArray(int size) {
+                        return new MyMessage[size];
+                    }
+                };
     }
 
 }
