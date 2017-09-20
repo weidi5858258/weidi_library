@@ -43,8 +43,8 @@ public class EventBus {
                     synchronized (objLock) {
                         objLock.notifyAll();
                     }
-                    if (mResultAsyncInterface != null) {
-                        mResultAsyncInterface.onResult(mObjResult);
+                    if (myMessage.aAsyncResult != null) {
+                        myMessage.aAsyncResult.onResult(mObjResult);
                     }
 
                     Log.i(TAG, "EventBus handleMessage() end");
@@ -83,26 +83,6 @@ public class EventBus {
     private final Object objLock = new Object();
     private Object mObjResult;
     private static Message mMessage;
-
-    // 用于异步执行后返回结果，如果有结果的话
-    //////////////////////////////////////////////////////////////////////////////////////
-
-    private ResultAsyncInterface mResultAsyncInterface;
-
-    public interface ResultAsyncInterface {
-
-        void onResult(Object object);
-
-    }
-
-    // 用完之后赋为null
-    public synchronized EventBus setResultAsyncInterface(
-            ResultAsyncInterface resultAsyncInterface) {
-        mResultAsyncInterface = resultAsyncInterface;
-        return this;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////
 
     public synchronized void init() {
         if (classMethodHashMap != null) {
@@ -232,6 +212,40 @@ public class EventBus {
         Log.i(TAG, "EventBus postAsync() sendMessage()");
     }
 
+    /***
+     *
+     * @param what 消息标志
+     * @param objectData 传递的数据
+     */
+    public void postAsync(
+            final Class clazz, final int what, final Object objectData,
+            final AAsyncResult aAsyncResult) {
+        if (clazz == null) {
+            throw new NullPointerException("EventBus post() : class = null");
+        }
+        if (classMethodHashMap == null || classMethodHashMap.isEmpty()) {
+            return;
+        }
+
+        Message msg = null;
+        if (mMessage != null) {
+            msg = Message.obtain(mMessage);
+            Log.i(TAG, "EventBus postAsync() obtain(mMessage)");
+        } else {
+            msg = mUiHandler.obtainMessage();
+            Log.i(TAG, "EventBus postAsync() obtainMessage()");
+        }
+        MyMessage myMessage = new MyMessage();
+        myMessage.clazz = clazz;
+        myMessage.what = what;
+        myMessage.obj = objectData;
+        myMessage.aAsyncResult = aAsyncResult;
+        msg.obj = myMessage;
+        mMessage = msg;
+        mUiHandler.sendMessage(msg);
+        Log.i(TAG, "EventBus postAsync() sendMessage()");
+    }
+
     private Object dispatchEvent(Class clazz, int what, Object objectData) {
         String sampleName = clazz.getSimpleName();
 
@@ -323,14 +337,27 @@ public class EventBus {
 
     //////////////////////////////////////////////////////////////////////////////////////
 
+    public static abstract class AAsyncResult implements Parcelable {
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+        }
+
+        public abstract void onResult(Object object);
+    }
+
     private static class MyMessage implements Parcelable {
 
         Class clazz;
         int what;
         Object obj;
-
-        public MyMessage() {
-        }
+        AAsyncResult aAsyncResult;
 
         @Override
         public int describeContents() {
@@ -353,12 +380,17 @@ public class EventBus {
             } else {
                 dest.writeInt(0);
             }
+            dest.writeParcelable(this.aAsyncResult, flags);
+        }
+
+        public MyMessage() {
         }
 
         protected MyMessage(Parcel in) {
             this.clazz = (Class) in.readSerializable();
             this.what = in.readInt();
             this.obj = in.readParcelable(Object.class.getClassLoader());
+            this.aAsyncResult = in.readParcelable(AAsyncResult.class.getClassLoader());
         }
 
         public static final Parcelable.Creator<MyMessage> CREATOR = new Parcelable
@@ -373,7 +405,6 @@ public class EventBus {
                 return new MyMessage[size];
             }
         };
-
     }
 
 }
