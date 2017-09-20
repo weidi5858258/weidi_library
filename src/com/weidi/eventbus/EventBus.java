@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
+/***
  * Created by root on 17-2-4.
  * 应用内通信
  */
