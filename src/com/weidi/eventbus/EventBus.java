@@ -139,7 +139,8 @@ public class EventBus {
      * 才会再继续执行A处下面的代码
      *
      * @param what 消息标志
-     * @param objectData 传递的数据
+     * @param objectData 传递的数据 传给onEvent(int what, Object object)的参数,object就是objectData.
+     *                   objectData对象需要Parcelable接口.
      */
     public synchronized Object postSync(
             final Class clazz, final int what, final Object objectData) {
@@ -182,6 +183,14 @@ public class EventBus {
         return dispatchEvent(clazz, what, objectData);
     }
 
+    /***
+     *
+     * @param clazz
+     * @param what
+     * @param objectData objectData对象需要Parcelable接口.
+     * @param aAsyncResult
+     * @return
+     */
     public synchronized Object postSync(
             final Class clazz, final int what, final Object objectData,
             final AAsyncResult aAsyncResult) {
@@ -229,7 +238,7 @@ public class EventBus {
      * 不需要返回结果
      *
      * @param what 消息标志
-     * @param objectData 传递的数据
+     * @param objectData 传递的数据 objectData对象需要Parcelable接口.
      */
     public void postAsync(
             final Class clazz, final int what, final Object objectData) {
@@ -262,7 +271,7 @@ public class EventBus {
      * 需要返回结果
      *
      * @param what 消息标志
-     * @param objectData 传递的数据
+     * @param objectData 传递的数据 objectData对象需要Parcelable接口.
      */
     public void postAsync(
             final Class clazz, final int what, final Object objectData,
@@ -420,9 +429,14 @@ public class EventBus {
             dest.writeInt(this.what);
             if (obj != null) {
                 try {
-                    Parcelable p = (Parcelable) obj;
-                    dest.writeInt(1);
-                    dest.writeParcelable(p, flags);
+                    if (obj instanceof Parcelable) {
+                        Parcelable p = (Parcelable) obj;
+                        dest.writeInt(1);
+                        dest.writeParcelable(p, flags);
+                    } else {
+                        Log.e(TAG,
+                                "EventBus writeToParcel() : objParam not instanceof Parcelable.");
+                    }
                 } catch (ClassCastException e) {
                     throw new RuntimeException(
                             "Can't marshal non-Parcelable objects across processes.");
