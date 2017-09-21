@@ -58,7 +58,7 @@ public class ImageHttpService extends AHttpService {
             URL url = new URL(this.mUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setConnectTimeout(30000);// 连接的超时时间
-            urlConnection.setReadTimeout(15000);// 响应的超时时间
+            urlConnection.setReadTimeout(30000);// 响应的超时时间
             urlConnection.setUseCaches(false);// 不使用缓存
             urlConnection.connect();
             int responseCode = urlConnection.getResponseCode();

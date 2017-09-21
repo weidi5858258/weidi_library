@@ -78,10 +78,10 @@ public class JsonHttpService extends AHttpService {
             }*/
             url = new URL(this.mUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setConnectTimeout(6000);// 连接的超时时间
+            urlConnection.setConnectTimeout(10000);// 连接的超时时间
             urlConnection.setUseCaches(false);// 不使用缓存
             urlConnection.setInstanceFollowRedirects(true);
-            urlConnection.setReadTimeout(3000);// 响应的超时时间
+            urlConnection.setReadTimeout(10000);// 响应的超时时间
             urlConnection.setDoInput(true);// 设置这个连接是否可以写入数据
             urlConnection.setDoOutput(true);// 设置这个连接是否可以输出数据
             urlConnection.setRequestMethod("POST");// 设置请求的方式
