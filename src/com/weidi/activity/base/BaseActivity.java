@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.weidi.activity.ScanCodeActivity;
+import com.weidi.eventbus.EventBus;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
 import com.weidi.utils.PermissionsUtils;
@@ -17,6 +18,7 @@ public abstract class BaseActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         mContext = this.getApplicationContext();
         if (!(this instanceof ScanCodeActivity)) {
             InjectUtils.inject(this, null);
@@ -51,9 +53,11 @@ public abstract class BaseActivity extends Activity {
 
     @Override
     public void onDestroy() {
+        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
+    public abstract Object onEvent(int what, Object object);
     /***
      * 下面两个是在子类中实现：
      * 1.需要请求的权限

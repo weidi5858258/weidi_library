@@ -17,8 +17,9 @@ public class CustomRunnable implements Runnable {
     private static final int RUNERROR = 2;
     private static final int ONPROGRESSUPDATE = 3;
 
-    private Object mObject = new Object();
+    private final Object mObject = new Object();
     private boolean mCanNext;
+    private static Message mMessage;
 
     private InnerHandler mHandler = null;
     private CallBack mCallBack = null;
@@ -77,9 +78,15 @@ public class CustomRunnable implements Runnable {
                 }
 
                 // runAfter
-                Message msg = mHandler.obtainMessage();
+                Message msg = null;
+                if (mMessage != null) {
+                    msg = Message.obtain(mMessage);
+                } else {
+                    msg = mHandler.obtainMessage();
+                }
                 msg.what = RUNAFTER;
                 msg.obj = object;
+                mMessage = msg;
                 mHandler.sendMessageDelayed(msg, runAfterSleepTime);
             } catch (Exception e) {
                 mHandler.sendEmptyMessage(RUNERROR);
@@ -92,9 +99,15 @@ public class CustomRunnable implements Runnable {
     }
 
     public final void publishProgress(Object object) {
-        Message msg = mHandler.obtainMessage();
+        Message msg = null;
+        if (mMessage != null) {
+            msg = Message.obtain(mMessage);
+        } else {
+            msg = mHandler.obtainMessage();
+        }
         msg.what = ONPROGRESSUPDATE;
         msg.obj = object;
+        mMessage = msg;
         mHandler.sendMessage(msg);
     }
 

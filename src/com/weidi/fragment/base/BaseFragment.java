@@ -8,20 +8,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.weidi.activity.MainActivity;
 import com.weidi.activity.base.BaseActivity;
+import com.weidi.eventbus.EventBus;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
 import com.weidi.log.Log;
 
-/**
+/***
  *
  */
 public abstract class BaseFragment extends Fragment {
 
     private static final String TAG = "BaseFragment";
     private static final boolean DEBUG = true;
-    protected MainActivity mMainActivity;
+    protected Activity mActivity;
     private Context mContext;
     private BackHandlerInterface mBackHandlerInterface;
     private boolean mIsNeedToDo = true;
@@ -43,9 +43,12 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        if (activity == null) {
+            throw new NullPointerException("BaseFragment onAttach():activity is null.");
+        }
         if (DEBUG)
             Log.d(TAG, "onAttach(): activity = " + activity);
-        mMainActivity = (MainActivity) activity;
+        mActivity = activity;
         mContext = activity.getApplicationContext();
         if (!(activity instanceof BackHandlerInterface)) {
             throw new ClassCastException("Hosting Activity must implement BackHandlerInterface");
@@ -57,6 +60,7 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         /**
          * 一旦我们设置 setRetainInstance(true)，意味着在 Activity 重绘时，
          * 我们的 BaseFragment 不会被重复绘制，也就是它会被“保留”。为了验证
@@ -163,6 +167,7 @@ public abstract class BaseFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        EventBus.getDefault().unregister(this);
         super.onDestroy();
         if (DEBUG)
             Log.d(TAG, "onDestroy()");
@@ -198,6 +203,7 @@ public abstract class BaseFragment extends Fragment {
         super.onHiddenChanged(hidden);
     }
 
+    // 写这个方法只是为了不直接调用onResume()方法
     private void onResume_() {
         if (DEBUG)
             Log.d(TAG, "onResume(): " + this);
@@ -212,10 +218,10 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public Activity getAttachedActivity() {
-        return mMainActivity;
+        return mActivity;
     }
 
-    public Context getMyContext() {
+    public Context getContext() {
         if (mContext == null) {
             if (getAttachedActivity() != null) {
                 mContext = getAttachedActivity().getApplicationContext();
@@ -230,6 +236,13 @@ public abstract class BaseFragment extends Fragment {
         return mBackHandlerInterface;
     }
 
+    /***
+     * 加了这个的作用:
+     * FragmentA中嵌套有FragmentB,那么在FragmentB中调用这个方法并设置为false
+     * 不然不这样做的话,按"后退"键后FragmentB给退出了.
+     * 而实际情况一般是按"后退"键后FragmentA应该退出.
+     * @param isNeedToDo
+     */
     protected void setNeedToDo(boolean isNeedToDo) {
         mIsNeedToDo = isNeedToDo;
     }
@@ -255,7 +268,7 @@ public abstract class BaseFragment extends Fragment {
      */
     //    protected abstract void initViewBefore(Bundle savedInstanceState);
 
-    /**
+    /***
      * 供子类调用，初始化数据，统一接口
      *
      * @return
@@ -265,13 +278,16 @@ public abstract class BaseFragment extends Fragment {
             ViewGroup container,
             Bundle savedInstanceState);
 
-    /**
+    /***
      * 所有继承BackHandledFragment的子类都将在这个方法中实现物理Back键按下后的逻辑
      * FragmentActivity捕捉到物理返回键点击事件后会首先询问Fragment是否消费该事件
      * 如果没有Fragment消息时FragmentActivity自己才会消费该事件
-     * 除了像QQ那样有底部导航栏,并且是由Fragment组成的,那么这几个Fragment返回true外,其他的都返回false.
+     * 除了像QQ那样有底部导航栏,并且是由Fragment组成的,那么这几个Fragment返回true外,
+     * 其他的都返回false.
      */
     public abstract boolean onBackPressed();
+
+    public abstract Object onEvent(int what, Object object);
 
     /**
      * 打开页面时，页面从右往左滑入

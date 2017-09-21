@@ -362,11 +362,11 @@ public class EventBus {
     // 下面的代码不打算使用
     //////////////////////////////////////////////////////////////////////////////////////
 
-    private ArrayList<EventListener> mEventListenerList = new ArrayList<EventListener>();
+    /*private ArrayList<EventListener> mEventListenerList = new ArrayList<EventListener>();
 
     public interface EventListener {
 
-        void onEvent(int what, Object object);
+        Object onEvent(int what, Object object);
 
     }
 
@@ -389,7 +389,7 @@ public class EventBus {
                 mEventListenerList.get(i).onEvent(what, object);
             }
         }
-    }
+    }*/
 
     //////////////////////////////////////////////////////////////////////////////////////
 

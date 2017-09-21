@@ -28,8 +28,10 @@ public class Log {
         mSwitch = true;
         try {
             File file = new File("/data/data/com.weidi.artifact/files/artifact.log");
-            if (!file.exists()) {
+            if(!file.getParentFile().exists()){
                 file.getParentFile().mkdirs();
+            }
+            if (!file.exists()) {
                 file.createNewFile();
             }
             mBufferedWriter = new BufferedWriter(
