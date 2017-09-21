@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.weidi.imageload.ImageSizeUtils;
@@ -142,6 +143,10 @@ public class ImageHttpCallback<T> extends AHttpCallback {
                         return;
                     }
                     if (bitmap != null) {
+                        String urlMD5 = md5(mUrl) + ".png";
+                        if (mImageView != null && urlMD5.equals((String) mImageView.getTag())) {
+                            mImageView.setImageBitmap(bitmap);
+                        }
                         mICustomerCallback.onSuccess((T) bitmap);
                     } else {
                         // Object is null
@@ -177,90 +182,101 @@ public class ImageHttpCallback<T> extends AHttpCallback {
         FileOutputStream fileOutputStream = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
         byte[] buffer = null;
+        String urlMD5 = null;
+        File pictureFile = null;
         try {
+            // 先看文件存不存在，若存在则直接加载，此时的文件不需要再次处理
+            if (TextUtils.isEmpty(this.mUrl)
+                    || TextUtils.isEmpty(this.fileSavePath)) {
+                Log.i(TAG, "ImageHttpCallback: mUrl or fileSavePath is null.");
+                return;
+            }
+            urlMD5 = md5(this.mUrl) + ".png";
+            pictureFile = new File(this.fileSavePath, urlMD5);
+            if (this.mImageView != null) {
+                this.mImageView.setTag(urlMD5);
+            }
+            if (pictureFile.exists()) {
+                Log.i(TAG, "downloadAndSaveBitmap() file exists return");
+                doResult(BitmapFactory.decodeFile(pictureFile.getAbsolutePath()));
+                return;
+            }
 
-            // 加上try是为了产生异常时不影响其他操作
-            try {
-                // put inputstream save to local as file
-                if (!TextUtils.isEmpty(this.mUrl)
-                        && !TextUtils.isEmpty(this.fileSavePath)
-                        && (this.mUrl.startsWith("http://")
-                        || this.mUrl.startsWith("https://"))) {
-                    File file = new File(this.fileSavePath);
-                    if (file != null && file.isDirectory()) {
-                        if (!file.exists()) {
-                            try {
-                                file.createNewFile();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        if (!file.canWrite()) {
-                            this.fileSavePath = null;
-                            /*Log.i(TAG, file.getAbsolutePath()
-                                    + " : This directory cann't write.");*/
-                        } else {
-                            this.fileSavePath = file.getAbsolutePath();
-                            /*Log.i(TAG, file.getAbsolutePath()
-                                    + " : Picture is saved this directory.");*/
-                        }
+            // 文件不存在，则从网上下载
+            // 如果mImageView不为null，则图片保存成mImageView大小，否则保存原图
+            //  加上try是为了产生异常时不影响其他操作
+            //  put inputstream save to local as file
+            if ((this.mUrl.startsWith("http://")
+                    || this.mUrl.startsWith("https://"))) {
+                File file = new File(this.fileSavePath);
+                if (file != null) {
+                    if (!file.exists()) {
+                        file.mkdirs();
+                    }
+                    if (!file.canWrite()) {
+                        this.fileSavePath = null;
+                        /*Log.i(TAG, file.getAbsolutePath()
+                                + " : This directory cann't write.");*/
+                    } else {
+                        this.fileSavePath = file.getAbsolutePath();
+                        /*Log.i(TAG, file.getAbsolutePath()
+                                + " : Picture is saved this directory.");*/
+                    }
+                    if (this.fileSavePath == null) {
+                        Log.i(TAG, "ImageHttpCallback: " + file.getAbsolutePath() + " couldn't " +
+                                "write.");
+                        return;
+                    }
+                    // 先把输入流保存到内存中
+                    byteArrayOutputStream = new ByteArrayOutputStream();
+                    buffer = new byte[1024];
+                    int len;
+                    while ((len = inputStream.read(buffer)) > -1) {
+                        byteArrayOutputStream.write(buffer, 0, len);
+                    }
+                    byteArrayOutputStream.flush();
 
-                        File pictureFile = new File(this.fileSavePath, md5(this.mUrl) + ".jpg");
-                        if (pictureFile != null
-                                && (!pictureFile.exists()
-                                || (pictureFile.exists() && pictureFile.length() == 0))) {
-
-                            byteArrayOutputStream = new ByteArrayOutputStream();
-                            buffer = new byte[1024];
-                            int len;
-                            while ((len = inputStream.read(buffer)) > -1) {
-                                byteArrayOutputStream.write(buffer, 0, len);
-                            }
-                            byteArrayOutputStream.flush();
-
-                            inputStream = new ByteArrayInputStream(
-                                    byteArrayOutputStream.toByteArray());
-                            fileOutputStream = new FileOutputStream(pictureFile);
-                            while ((len = inputStream.read(buffer)) != -1) {
-                                fileOutputStream.write(buffer, 0, len);
-                            }
-                            fileOutputStream.flush();
+                    // 生成一张mImageView大小或者手机屏幕大小的图片
+                    inputStream = new ByteArrayInputStream(
+                            byteArrayOutputStream.toByteArray());
+                    inputStream.mark(inputStream.available());
+                    BitmapFactory.Options opts = new BitmapFactory.Options();
+                    opts.inJustDecodeBounds = true;
+                    // 此时没有被加载到内存中
+                    bitmap = BitmapFactory.decodeStream(inputStream, null, opts);
+                    opts.inSampleSize = -1;
+                    if (mImageView != null) {
+                        // 获取imageview想要显示的宽和高
+                        ImageSizeUtils.ImageSize imageViewSize =
+                                ImageSizeUtils.getImageViewSize(mImageView);
+                        opts.inSampleSize = ImageSizeUtils.caculateInSampleSize(
+                                opts, imageViewSize.width, imageViewSize.height);
+                    } else {
+                        if (mContext != null) {
+                            DisplayMetrics displayMetrics = mContext.getResources()
+                                    .getDisplayMetrics();
+                            opts.inSampleSize = ImageSizeUtils.caculateInSampleSize(
+                                    // 实际图片的宽高跟手机屏幕的宽高相比较
+                                    opts, displayMetrics.widthPixels, displayMetrics.heightPixels);
                         }
                     }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                    opts.inJustDecodeBounds = false;
+                    inputStream.reset();
+                    if (opts.inSampleSize != -1) {
+                        bitmap = BitmapFactory.decodeStream(inputStream, null, opts);
+                    }
 
-            if (byteArrayOutputStream != null) {
-                inputStream = new ByteArrayInputStream(
-                        byteArrayOutputStream.toByteArray());
-            }
-
-            inputStream.mark(inputStream.available());
-            BitmapFactory.Options opts = new BitmapFactory.Options();
-            opts.inJustDecodeBounds = true;
-            // 此时没有被加载到内存中
-            bitmap = BitmapFactory.decodeStream(inputStream, null, opts);
-            opts.inSampleSize = -1;
-            if (mImageView != null) {
-                // 获取imageview想要显示的宽和高
-                ImageSizeUtils.ImageSize imageViewSize =
-                        ImageSizeUtils.getImageViewSize(mImageView);
-                opts.inSampleSize = ImageSizeUtils.caculateInSampleSize(
-                        opts, imageViewSize.width, imageViewSize.height);
-            } else {
-                if (mContext != null) {
-                    DisplayMetrics displayMetrics = mContext.getResources().getDisplayMetrics();
-                    opts.inSampleSize = ImageSizeUtils.caculateInSampleSize(
-                            // 实际图片的宽高跟手机屏幕的宽高相比较
-                            opts, displayMetrics.widthPixels, displayMetrics.heightPixels);
+                    if (this.mImageView == null) {
+                        // 保存原图
+                        inputStream = new ByteArrayInputStream(
+                                byteArrayOutputStream.toByteArray());
+                        fileOutputStream = new FileOutputStream(pictureFile);
+                        while ((len = inputStream.read(buffer)) != -1) {
+                            fileOutputStream.write(buffer, 0, len);
+                        }
+                        fileOutputStream.flush();
+                    }
                 }
-            }
-            opts.inJustDecodeBounds = false;
-            inputStream.reset();
-            if (opts.inSampleSize != -1) {
-                bitmap = BitmapFactory.decodeStream(inputStream, null, opts);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -293,46 +309,27 @@ public class ImageHttpCallback<T> extends AHttpCallback {
 
     private void loadLocalPictureFile() {
         Bitmap bitmap = null;
-        FileInputStream fileInputStream = null;
         FileOutputStream fileOutputStream = null;
+        String urlMD5 = null;
+        File pictureFile = null;
         try {
-            // 加上try是为了产生异常时不影响其他操作
-            try {
-                // put inputstream save to local as file
-                if (!TextUtils.isEmpty(this.mUrl)
-                        && !TextUtils.isEmpty(this.fileSavePath)) {
-                    File pictureFile = new File(this.mUrl);
-                    if (pictureFile != null && pictureFile.isFile() && pictureFile.length() != 0) {
-                        if (!pictureFile.exists()) {
-                            doResult(FILE_NOT_EXISTS+"");
-                            return;
-                        }
-                        if (!pictureFile.canRead()) {
-                            doResult(FILE_NOT_READ+"");
-                            return;
-                        }
-
-                        File needToSavePictureFile = new File(
-                                this.fileSavePath, md5(this.mUrl) + ".jpg");
-                        if (needToSavePictureFile != null
-                                && (!needToSavePictureFile.exists()
-                                || (needToSavePictureFile.exists()
-                                && needToSavePictureFile.length() == 0))) {
-                            byte[] buffer = new byte[1024];
-                            int len;
-                            fileInputStream = new FileInputStream(pictureFile);
-                            fileOutputStream = new FileOutputStream(needToSavePictureFile);
-                            while ((len = fileInputStream.read(buffer)) != -1) {
-                                fileOutputStream.write(buffer, 0, len);
-                            }
-                            fileOutputStream.flush();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            // 先看文件存不存在，若存在则直接加载，此时的文件不需要再次处理
+            if (TextUtils.isEmpty(this.mUrl)
+                    || TextUtils.isEmpty(this.fileSavePath)) {
+                Log.i(TAG, "ImageHttpCallback: mUrl or fileSavePath is null.");
+                return;
+            }
+            urlMD5 = md5(this.mUrl) + ".png";
+            pictureFile = new File(this.fileSavePath, urlMD5);
+            if (this.mImageView != null) {
+                this.mImageView.setTag(urlMD5);
+            }
+            if (pictureFile.exists()) {
+                doResult(BitmapFactory.decodeFile(pictureFile.getAbsolutePath()));
+                return;
             }
 
+            // 生成一张mImageView大小或者手机屏幕大小的图片
             BitmapFactory.Options opts = new BitmapFactory.Options();
             opts.inJustDecodeBounds = true;
             // 此时没有被加载到内存中
@@ -356,19 +353,18 @@ public class ImageHttpCallback<T> extends AHttpCallback {
             if (opts.inSampleSize != -1) {
                 bitmap = BitmapFactory.decodeFile(this.mUrl, opts);
             }
+
+            // 保存这张图片
+            if(bitmap != null){
+                fileOutputStream = new FileOutputStream(pictureFile);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (fileOutputStream != null) {
                 try {
                     fileOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (fileInputStream != null) {
-                try {
-                    fileInputStream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

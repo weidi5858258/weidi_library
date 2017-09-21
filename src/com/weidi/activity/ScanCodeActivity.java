@@ -133,6 +133,11 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     }
 
     @Override
+    public Object onEvent(int what, Object object) {
+        return what;
+    }
+
+    @Override
     public String[] getRequiredPermissions() {
         return new String[0];
     }
