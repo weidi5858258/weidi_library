@@ -3,6 +3,7 @@ package com.weidi.volley.image;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -17,7 +18,6 @@ import com.weidi.volley.ICustomerCallback;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +25,6 @@ import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static com.weidi.volley.IHttpService.FILE_NOT_EXISTS;
-import static com.weidi.volley.IHttpService.FILE_NOT_READ;
 import static com.weidi.volley.IHttpService.RETURN_OBJECT_IS_NULL;
 
 /**
@@ -45,6 +43,8 @@ public class ImageHttpCallback<T> extends AHttpCallback {
     // 我现在是这样设计的
     private Context mContext;
     private ImageView mImageView;
+    // true时必下载原图
+    private boolean mMustDownloadSourceImage;
 
     @Override
     public void onSuccess(HttpURLConnection httpURLConnection) {
@@ -86,22 +86,50 @@ public class ImageHttpCallback<T> extends AHttpCallback {
         return this;
     }
 
+    public Context getContext() {
+        return this.mContext;
+    }
+
     public ImageHttpCallback setImageView(ImageView imageView) {
         this.mImageView = imageView;
+        if (!TextUtils.isEmpty(this.mUrl) && imageView != null) {
+            this.mImageView.setTag(md5(mUrl));
+        }
         return this;
+    }
+
+    public ImageView getImageView() {
+        return this.mImageView;
     }
 
     public ImageHttpCallback setURL(String url) {
         this.mUrl = url;
+        if (!TextUtils.isEmpty(this.mUrl) && this.mImageView != null) {
+            this.mImageView.setTag(md5(mUrl));
+        }
         return this;
+    }
+
+    public String getURL() {
+        return this.mUrl;
     }
 
     public ImageHttpCallback setFileSavePath(String path) {
         this.fileSavePath = path;
+        // Log.i(TAG, "ImageHttpCallback: fileSavePath: " + fileSavePath);
         return this;
     }
 
-    private static String md5(String str) {
+    public String getFileSavePath() {
+        return this.fileSavePath;
+    }
+
+    public ImageHttpCallback setMustDownloadSourceImage(boolean mustDownloadSourceImage) {
+        this.mMustDownloadSourceImage = mustDownloadSourceImage;
+        return this;
+    }
+
+    public static String md5(String str) {
         byte[] digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("md5");
@@ -131,50 +159,55 @@ public class ImageHttpCallback<T> extends AHttpCallback {
     }
 
     private void doResult(final Bitmap bitmap) {
-        if (mICustomerCallback != null) {
-            if (this.mHandler == null) {
-                this.mHandler = new Handler(Looper.getMainLooper());
-            }
-            mHandler.post(new Runnable() {
+        if (this.mHandler == null) {
+            this.mHandler = new Handler(Looper.getMainLooper());
+        }
+        mHandler.post(new Runnable() {
 
-                @Override
-                public void run() {
-                    if (mICustomerCallback.isIntercept()) {
-                        return;
+            @Override
+            public void run() {
+                if (mICustomerCallback != null && mICustomerCallback.isIntercept()) {
+                    return;
+                }
+                if (bitmap != null) {
+                    String urlMD5 = md5(mUrl);
+                    String tag = (String) mImageView.getTag();
+                    if (mImageView != null && urlMD5.equals((String) mImageView.getTag())) {
+                        /*Log.i(TAG, "ImageHttpCallback: mImageView: " + mImageView +
+                                " urlMD5: " + urlMD5);*/
+                        mImageView.setImageBitmap(bitmap);
                     }
-                    if (bitmap != null) {
-                        String urlMD5 = md5(mUrl) + ".png";
-                        if (mImageView != null && urlMD5.equals((String) mImageView.getTag())) {
-                            mImageView.setImageBitmap(bitmap);
-                        }
+                    if (mICustomerCallback != null) {
                         mICustomerCallback.onSuccess((T) bitmap);
-                    } else {
+                    }
+                } else {
+                    if (mICustomerCallback != null) {
                         // Object is null
                         mICustomerCallback.onFailed(
                                 ImageHttpCallback.this.mUrl
                                         + " responseCode: " + RETURN_OBJECT_IS_NULL);
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     private void doResult(final String response) {
-        if (mICustomerCallback != null) {
-            if (this.mHandler == null) {
-                this.mHandler = new Handler(Looper.getMainLooper());
-            }
-            mHandler.post(new Runnable() {
+        if (this.mHandler == null) {
+            this.mHandler = new Handler(Looper.getMainLooper());
+        }
+        mHandler.post(new Runnable() {
 
-                @Override
-                public void run() {
+            @Override
+            public void run() {
+                if (mICustomerCallback != null) {
                     if (mICustomerCallback.isIntercept()) {
                         return;
                     }
                     mICustomerCallback.onFailed(response);
                 }
-            });
-        }
+            }
+        });
     }
 
     private void downloadAndSaveBitmap(InputStream inputStream) {
@@ -182,25 +215,9 @@ public class ImageHttpCallback<T> extends AHttpCallback {
         FileOutputStream fileOutputStream = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
         byte[] buffer = null;
-        String urlMD5 = null;
         File pictureFile = null;
         try {
-            // 先看文件存不存在，若存在则直接加载，此时的文件不需要再次处理
-            if (TextUtils.isEmpty(this.mUrl)
-                    || TextUtils.isEmpty(this.fileSavePath)) {
-                Log.i(TAG, "ImageHttpCallback: mUrl or fileSavePath is null.");
-                return;
-            }
-            urlMD5 = md5(this.mUrl) + ".png";
-            pictureFile = new File(this.fileSavePath, urlMD5);
-            if (this.mImageView != null) {
-                this.mImageView.setTag(urlMD5);
-            }
-            if (pictureFile.exists()) {
-                Log.i(TAG, "downloadAndSaveBitmap() file exists return");
-                doResult(BitmapFactory.decodeFile(pictureFile.getAbsolutePath()));
-                return;
-            }
+            pictureFile = new File(this.fileSavePath, md5(this.mUrl) + ".png");
 
             // 文件不存在，则从网上下载
             // 如果mImageView不为null，则图片保存成mImageView大小，否则保存原图
@@ -264,9 +281,15 @@ public class ImageHttpCallback<T> extends AHttpCallback {
                     inputStream.reset();
                     if (opts.inSampleSize != -1) {
                         bitmap = BitmapFactory.decodeStream(inputStream, null, opts);
+                        // 保存这张图片
+                        if (bitmap != null) {
+                            fileOutputStream = new FileOutputStream(pictureFile);
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
+                        }
                     }
 
-                    if (this.mImageView == null) {
+                    if (this.mMustDownloadSourceImage ||
+                            (this.mImageView == null && this.mContext == null)) {
                         // 保存原图
                         inputStream = new ByteArrayInputStream(
                                 byteArrayOutputStream.toByteArray());
@@ -280,6 +303,9 @@ public class ImageHttpCallback<T> extends AHttpCallback {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if (pictureFile != null && pictureFile.exists()) {
+                pictureFile.delete();
+            }
         } finally {
             if (fileOutputStream != null) {
                 try {
@@ -310,24 +336,9 @@ public class ImageHttpCallback<T> extends AHttpCallback {
     private void loadLocalPictureFile() {
         Bitmap bitmap = null;
         FileOutputStream fileOutputStream = null;
-        String urlMD5 = null;
         File pictureFile = null;
         try {
-            // 先看文件存不存在，若存在则直接加载，此时的文件不需要再次处理
-            if (TextUtils.isEmpty(this.mUrl)
-                    || TextUtils.isEmpty(this.fileSavePath)) {
-                Log.i(TAG, "ImageHttpCallback: mUrl or fileSavePath is null.");
-                return;
-            }
-            urlMD5 = md5(this.mUrl) + ".png";
-            pictureFile = new File(this.fileSavePath, urlMD5);
-            if (this.mImageView != null) {
-                this.mImageView.setTag(urlMD5);
-            }
-            if (pictureFile.exists()) {
-                doResult(BitmapFactory.decodeFile(pictureFile.getAbsolutePath()));
-                return;
-            }
+            pictureFile = new File(this.fileSavePath, md5(this.mUrl) + ".png");
 
             // 生成一张mImageView大小或者手机屏幕大小的图片
             BitmapFactory.Options opts = new BitmapFactory.Options();
@@ -355,12 +366,15 @@ public class ImageHttpCallback<T> extends AHttpCallback {
             }
 
             // 保存这张图片
-            if(bitmap != null){
+            if (bitmap != null) {
                 fileOutputStream = new FileOutputStream(pictureFile);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if (pictureFile != null && pictureFile.exists()) {
+                pictureFile.delete();
+            }
         } finally {
             if (fileOutputStream != null) {
                 try {

@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.weidi.customadapter.interfaces.IViewSetter;
 
-/**
+/***
 
 
  */
@@ -46,7 +46,6 @@ public class CustomViewHolder extends RecyclerView.ViewHolder
         return holder;
     }
 
-    @Deprecated
     public <T extends View> T getView(int id) {
         return findViewById(id);
     }
