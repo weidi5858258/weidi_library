@@ -3,6 +3,7 @@ apply plugin: 'com.android.library'
 buildscript {
     System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
     repositories {
+        google()
         jcenter()
     }
     dependencies {
@@ -12,6 +13,7 @@ buildscript {
 
 allprojects {
     repositories {
+        google()
         jcenter()
     }
     gradle.projectsEvaluated {
@@ -26,11 +28,11 @@ allprojects {
 //////////////////////////The above parts do not modify//////////////////////////
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 25
+        targetSdkVersion 26
         signingConfig signingConfigs.debug
 //        multiDexEnabled true
     }
@@ -75,14 +77,21 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'lib')
-    compile 'com.android.support:recyclerview-v7:25.3.1'
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:support-v4:25.3.1'
+//    compile 'com.android.support:recyclerview-v7:25.3.1'
+//    compile 'com.android.support:appcompat-v7:25.3.1'
+//    compile 'com.android.support:support-v4:25.3.1'
     // compile files('libs/android-support-v4.jar')
     compile files('libs/gson-2.3.1.jar')
     compile files('libs/zxing.jar')
     compile files('libs/nineoldandroids-2.4.0.jar')
     compile files('libs/fastjson-1.2.35.jar')
+
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:support-v4:26.1.0'
+    implementation 'com.android.support:leanback-v17:26.1.0'
+    implementation 'com.android.support:recyclerview-v7:26.1.0'
+
+    implementation 'com.android.support:support-tv-provider:26.1.0'
 }
 
 android {
