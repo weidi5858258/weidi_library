@@ -46,6 +46,7 @@ public class CustomRunnable implements Runnable {
             throw new RuntimeException("CustomRunnable Object isn't created at main thread!!!");
         }
         if (mHandler == null) {
+            // 每个任务都是创建一次Handler对象,需要改进一下.改为一个应用只创建一个Handler对象.
             mHandler = new InnerHandler(this);
         }
     }
@@ -78,12 +79,7 @@ public class CustomRunnable implements Runnable {
                 }
 
                 // runAfter
-                Message msg = null;
-                if (mMessage != null) {
-                    msg = Message.obtain(mMessage);
-                } else {
-                    msg = mHandler.obtainMessage();
-                }
+                Message msg = getMessage();
                 msg.what = RUNAFTER;
                 msg.obj = object;
                 mMessage = msg;
@@ -98,13 +94,13 @@ public class CustomRunnable implements Runnable {
         }
     }
 
+    /***
+     * 异步执行的,也就是说子线程向主线程"发送命令"需要主线程执行一些任务时,
+     * 子线程发送完命令就接着执行下面的工作,并不等待主线程执行完后再执行下面的工作.
+     * @param object
+     */
     public final void publishProgress(Object object) {
-        Message msg = null;
-        if (mMessage != null) {
-            msg = Message.obtain(mMessage);
-        } else {
-            msg = mHandler.obtainMessage();
-        }
+        Message msg = getMessage();
         msg.what = ONPROGRESSUPDATE;
         msg.obj = object;
         mMessage = msg;
@@ -132,6 +128,16 @@ public class CustomRunnable implements Runnable {
             runAfterSleepTime = seconds;
         }
         return this;
+    }
+
+    private Message getMessage() {
+        Message msg = null;
+        if (mMessage != null) {
+            msg = Message.obtain(mMessage);
+        } else {
+            msg = mHandler.obtainMessage();
+        }
+        return msg;
     }
 
     private static class InnerHandler extends Handler {
