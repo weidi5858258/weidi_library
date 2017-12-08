@@ -4,8 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.weidi.eventbus.EventBus;
-
 /**
  * Created by root on 17-4-11.
  */
@@ -19,7 +17,6 @@ public abstract class BaseService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -29,10 +26,7 @@ public abstract class BaseService extends Service {
 
     @Override
     public void onDestroy() {
-        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
-
-    public abstract Object onEvent(int what, Object object);
 
 }

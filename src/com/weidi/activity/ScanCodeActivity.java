@@ -133,21 +133,6 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     }
 
     @Override
-    public Object onEvent(int what, Object object) {
-        return what;
-    }
-
-    @Override
-    public String[] getRequiredPermissions() {
-        return new String[0];
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-    }
-
-    @Override
     public void onBackPressed() {
         if (DEBUG) Log.d(TAG, "onBackPressed()");
         finish();

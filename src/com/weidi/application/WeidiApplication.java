@@ -2,10 +2,12 @@ package com.weidi.application;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Looper;
 
 import com.weidi.dbutil.SimpleDao;
-import com.weidi.eventbus.EventBus;
 import com.weidi.log.Log;
+import com.weidi.utils.EventBusUtils;
+import com.weidi.utils.HandlerUtils;
 import com.weidi.utils.MyToast;
 
 /**
@@ -34,7 +36,8 @@ public class WeidiApplication extends Application {
         MyToast.setContext(this);
         MyToast.getInstance();
 
-        EventBus.getDefault().init();
+        HandlerUtils.init(Looper.getMainLooper());
+        EventBusUtils.init();
 
         Log.init();
 

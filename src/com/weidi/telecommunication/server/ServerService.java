@@ -34,11 +34,6 @@ public class ServerService extends BaseService {
         super.onDestroy();
     }
 
-    @Override
-    public Object onEvent(int what, Object object) {
-        return null;
-    }
-
     private void init() {
         ThreadPool.getFixedThreadPool().execute(new Runnable() {
             @Override

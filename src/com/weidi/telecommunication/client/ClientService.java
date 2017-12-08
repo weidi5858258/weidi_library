@@ -37,9 +37,4 @@ public class ClientService extends BaseService {
         Client.getInstance().connect();
     }
 
-    @Override
-    public Object onEvent(int what, Object object) {
-        return null;
-    }
-
 }

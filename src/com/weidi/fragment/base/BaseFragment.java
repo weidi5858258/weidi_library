@@ -9,10 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.weidi.activity.base.BaseActivity;
-import com.weidi.eventbus.EventBus;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
 import com.weidi.log.Log;
+import com.weidi.utils.EventBusUtils;
 
 /***
  *
@@ -21,7 +21,6 @@ public abstract class BaseFragment extends Fragment {
 
     private static final String TAG = "BaseFragment";
     private static final boolean DEBUG = true;
-    protected Activity mActivity;
     private Context mContext;
     private BackHandlerInterface mBackHandlerInterface;
     private boolean mIsNeedToDo = true;
@@ -48,7 +47,6 @@ public abstract class BaseFragment extends Fragment {
         }
         if (DEBUG)
             Log.d(TAG, "onAttach(): activity = " + activity);
-        mActivity = activity;
         mContext = activity.getApplicationContext();
         if (!(activity instanceof BackHandlerInterface)) {
             throw new ClassCastException("Hosting Activity must implement BackHandlerInterface");
@@ -60,7 +58,6 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EventBus.getDefault().register(this);
         /**
          * 一旦我们设置 setRetainInstance(true)，意味着在 Activity 重绘时，
          * 我们的 BaseFragment 不会被重复绘制，也就是它会被“保留”。为了验证
@@ -167,7 +164,6 @@ public abstract class BaseFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        EventBus.getDefault().unregister(this);
         super.onDestroy();
         if (DEBUG)
             Log.d(TAG, "onDestroy()");
@@ -217,15 +213,9 @@ public abstract class BaseFragment extends Fragment {
             Log.d(TAG, "onPause(): " + this);
     }
 
-    public Activity getAttachedActivity() {
-        return mActivity;
-    }
-
     public Context getContext() {
         if (mContext == null) {
-            if (getAttachedActivity() != null) {
-                mContext = getAttachedActivity().getApplicationContext();
-            } else if (getActivity() != null) {
+            if (getActivity() != null) {
                 mContext = getActivity().getApplicationContext();
             }
         }
@@ -248,14 +238,14 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public void enterFragment() {
-        if (getAttachedActivity() != null) {
-            ((BaseActivity) getAttachedActivity()).enterActivity();
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).enterActivity();
         }
     }
 
     public void exitFragment() {
-        if (getAttachedActivity() != null) {
-            ((BaseActivity) getAttachedActivity()).exitActivity();
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).exitActivity();
         }
     }
 
@@ -286,8 +276,6 @@ public abstract class BaseFragment extends Fragment {
      * 其他的都返回false.
      */
     public abstract boolean onBackPressed();
-
-    public abstract Object onEvent(int what, Object object);
 
     /**
      * 打开页面时，页面从右往左滑入

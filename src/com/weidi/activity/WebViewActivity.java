@@ -13,11 +13,13 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import com.weidi.activity.base.BaseActivity;
+
 /***
  Android的WebView中H5页面全屏播放视频
  */
 
-public class WebViewActivity extends Activity {
+public class WebViewActivity extends BaseActivity {
 
     private FrameLayout mFrameLayout;
     private WebView mWebView;
@@ -25,7 +27,7 @@ public class WebViewActivity extends Activity {
     private String URL = "http://m.tv.sohu.com/20130704/n380744170.shtml";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         // setContentView(R.layout.activity_webview);

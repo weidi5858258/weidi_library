@@ -1,5 +1,6 @@
 package com.weidi.utils;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -61,11 +62,10 @@ public class PermissionsUtils {
      有什么样的权限就进行什么样的操作.
      */
     public static final String[] REQUIRED_PERMISSIONS = {
-//            Manifest.permission.REQUEST_INSTALL_PACKAGES,
-//            Manifest.permission.SYSTEM_ALERT_WINDOW,
-//            Manifest.permission.READ_PHONE_STATE,
-//            Manifest.permission.READ_EXTERNAL_STORAGE,
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            android.Manifest.permission.VIBRATE,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     public interface IRequestPermissionsResult {
