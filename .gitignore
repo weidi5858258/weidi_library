@@ -1,0 +1,6 @@
+.git
+build
+weidi_library.iml
+/.idea/*
+/build/intermediates/res/*
+/build
