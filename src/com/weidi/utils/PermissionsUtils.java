@@ -63,9 +63,13 @@ public class PermissionsUtils {
      */
     public static final String[] REQUIRED_PERMISSIONS = {
             android.Manifest.permission.VIBRATE,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+
+            android.Manifest.permission.READ_PHONE_STATE,
+            android.Manifest.permission.READ_SMS,
+            android.Manifest.permission.READ_PHONE_NUMBERS,
+
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     public interface IRequestPermissionsResult {

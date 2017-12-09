@@ -76,7 +76,9 @@ public abstract class BaseFragment extends Fragment {
          * 这行代码在Activity的配置发生变化时onCreate()和onDestroy()方法
          * 不执行的情况下才有用,如果执行的话处理不好反而会发生不好的情况.
          * 如果实现这句代码的话,那么初始化工作放到onAttach(Activity activity)方法中去.
-         *
+         * 上面的意思就是调用setRetainInstance(true);这行代码的前提
+         * 最好是Activity在旋转屏幕时onCreate()和onDestroy()方法不会执行，
+         * 因此需要在AndroidManifest.xml中配置Activity。
          */
         setRetainInstance(true);
         if (DEBUG)
@@ -184,13 +186,15 @@ public abstract class BaseFragment extends Fragment {
      * 被add()或者popBackStack()时不会回调这个方法
      * 弹窗时不会被回调(是由当前的Fragment弹出的一个DialogFragment)
      * 如果是弹出一个DialogActivity窗口,则应该会被回调,
-     * 因为当前Fragment所在的Activity的生命周期发生了变化,则当前Fragment的生命周期也会发生变化
+     * 因为当前Fragment所在的Activity的生命周期发生了变化,
+     * 则当前Fragment的生命周期也会发生变化
      *
      * @param hidden if true that mean hidden
      */
     @Override
     public void onHiddenChanged(boolean hidden) {
-        if (DEBUG) Log.d(TAG, "onHiddenChanged():hidden = " + hidden);
+        if (DEBUG)
+            Log.d(TAG, "onHiddenChanged():hidden = " + hidden);
         if (hidden) {
             onPause_();
         } else {
@@ -235,18 +239,6 @@ public abstract class BaseFragment extends Fragment {
      */
     protected void setNeedToDo(boolean isNeedToDo) {
         mIsNeedToDo = isNeedToDo;
-    }
-
-    public void enterFragment() {
-        if (getActivity() != null) {
-            ((BaseActivity) getActivity()).enterActivity();
-        }
-    }
-
-    public void exitFragment() {
-        if (getActivity() != null) {
-            ((BaseActivity) getActivity()).exitActivity();
-        }
     }
 
     protected abstract int provideLayout();
