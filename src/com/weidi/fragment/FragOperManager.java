@@ -1,5 +1,6 @@
 package com.weidi.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -78,10 +79,12 @@ import static android.R.attr.fragment;
 public class FragOperManager implements Serializable {
 
     private static final String TAG = "FragOperManager";
-    private volatile static FragOperManager sFragOperManager;
     public static final int HIDE = 0;
     public static final int POPBACKSTACK = 1;
     public static final int POPBACKSTACKALL = 2;
+    private volatile static FragOperManager sFragOperManager;
+    private List<Map<Activity, Integer>> mMapList;
+    private List<Fragment> mFragmentsList;
 
     private FragOperManager() {
         EventBusUtils.register(this);
@@ -100,45 +103,10 @@ public class FragOperManager implements Serializable {
         return sFragOperManager;
     }
 
-    /**
-     * FragmentActivity 实例
-     */
-//    private Activity mActivity;
-    private List<Map<Activity, Integer>> mMapList;
-    /**
-     * 该Activity所有fragment的集合
-     */
-    private List<Fragment> mFragmentsList;
-
-    /**
-     * BaseFragment 管理器
-     */
-//    private FragmentManager fManager;
-
-    /**
-     * 装Fragment的容器
-     */
-//    private int mContainerId;
-
-
-    /**
-     * @param activity
-     * @param containerId
-     */
-    /*public FragOperManager(Activity activity, int containerId) {
-        if (activity == null) {
-            throw new NullPointerException("FragOperManager's mActivity is null.");
-        }
-        if (containerId <= 0) {
-            throw new IllegalArgumentException("FragOperManager's mContainerId is Invalid.");
-        }
-//        this.mActivity = activity;
-//        this.mContainerId = containerId;
-//        this.fManager = activity.getFragmentManager();
-        this.mFragmentsList = new ArrayList<Fragment>();
-        EventBusUtils.register(this);
-    }*/
     public void setActivityAndContainerId(Activity activity, int containerId) {
+        if (activity == null || mMapList == null) {
+            return;
+        }
         Map<Activity, Integer> map = new HashMap<Activity, Integer>();
         map.put(activity, containerId);
         this.mMapList.add(map);
@@ -160,7 +128,7 @@ public class FragOperManager implements Serializable {
         }
     }
 
-    public List<Fragment> getmFragmentsList() {
+    public List<Fragment> getFragmentsList() {
         return mFragmentsList;
     }
 
@@ -182,6 +150,7 @@ public class FragOperManager implements Serializable {
                 || mMapList.isEmpty()) {
             return;
         }
+
         Iterator<Map<Activity, Integer>> iterator = mMapList.iterator();
         int containerId = -1;
         while (iterator.hasNext()) {

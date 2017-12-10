@@ -74,7 +74,11 @@ public abstract class BaseActivity
          */
         if (this.mSavedInstanceState != null) {
             final String fragmentTag = this.mSavedInstanceState.getString("FragmentTag");
-            List<Fragment> fragmentsList = FragOperManager.getInstance().getmFragmentsList();
+            List<Fragment> fragmentsList = FragOperManager.getInstance().getFragmentsList();
+            if(fragmentsList == null){
+                return;
+            }
+            FragOperManager.getInstance().enter(this, mBaseFragment, null);
             int count = fragmentsList.size();
             for (int i = 0; i < count; i++) {
                 final Fragment fragment = fragmentsList.get(i);
@@ -196,7 +200,11 @@ public abstract class BaseActivity
         mFragmentTag = fragmentTag;
     }
 
-    public void setContainerId(int containerId) {
+    /***
+     * 放到Activity的onCreate()方法中去调用
+     * @param containerId
+     */
+    protected void setFragmentContainerId(int containerId) {
         FragOperManager.getInstance().setActivityAndContainerId(this, containerId);
     }
 
