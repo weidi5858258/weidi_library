@@ -158,7 +158,8 @@ public class FragOperManager implements Serializable {
         }
 
         // fragment显示时的动画
-        fTransaction.setCustomAnimations(R.animator.push_left_in, R.animator.push_left_out);
+        fTransaction.setCustomAnimations(
+                R.animator.push_left_in, R.animator.push_left_out);
         fTransaction.show(fragment);
         // 旋转屏幕,然后去添加一个Fragment,出现异常
         // 旋转屏幕后
@@ -241,6 +242,7 @@ public class FragOperManager implements Serializable {
                 || !mFragmentsList.contains(fragment)) {
             return;
         }
+
         FragmentTransaction fTransaction = fManager.beginTransaction();
         // 不需要先加载一个Fragment
         switch (exitType) {
@@ -251,6 +253,8 @@ public class FragOperManager implements Serializable {
                     break;
                 }
                 Fragment showFragment = mFragmentsList.get(count - 1);
+                fTransaction.setCustomAnimations(
+                        R.animator.push_left_in, R.animator.push_left_out);
                 fTransaction.show(showFragment);
                 mFragmentsList.remove(fragment);
                 mFragmentsList.add(0, fragment);
@@ -269,6 +273,9 @@ public class FragOperManager implements Serializable {
                     fTransaction.hide(hideFragment);
                 }
                 showFragment = mFragmentsList.get(count - 1);
+                // fragment显示时的动画
+                fTransaction.setCustomAnimations(
+                        R.animator.push_left_in, R.animator.push_left_out);
                 fTransaction.show(showFragment);
                 break;
 
@@ -311,7 +318,7 @@ public class FragOperManager implements Serializable {
         if (mFragmentsList == null || mFragmentsList.isEmpty()) {
             return;
         }
-        
+
         FragmentTransaction fTransaction = fManager.beginTransaction();
         Iterator<Fragment> iterator = mFragmentsList.iterator();
         while (iterator.hasNext()) {
