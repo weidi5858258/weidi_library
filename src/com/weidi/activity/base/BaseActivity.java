@@ -74,7 +74,7 @@ public abstract class BaseActivity
          */
         if (this.mSavedInstanceState != null) {
             final String fragmentTag = this.mSavedInstanceState.getString("FragmentTag");
-            List<Fragment> fragmentsList = getFragOperManager().getmFragmentsList();
+            List<Fragment> fragmentsList = FragOperManager.getInstance().getmFragmentsList();
             int count = fragmentsList.size();
             for (int i = 0; i < count; i++) {
                 final Fragment fragment = fragmentsList.get(i);
@@ -112,7 +112,9 @@ public abstract class BaseActivity
     @Override
     public void onDestroy() {
         mSavedInstanceState = null;
+        FragOperManager.getInstance().removeActivity(this);
         super.onDestroy();
+        exitActivity();
     }
 
     /***
@@ -155,7 +157,7 @@ public abstract class BaseActivity
                 EventBusUtils.postAsync(
                         FragOperManager.class,
                         type,
-                        new Object[]{mBaseFragment});
+                        new Object[]{this, mBaseFragment});
                 break;
             }
         }
@@ -194,18 +196,8 @@ public abstract class BaseActivity
         mFragmentTag = fragmentTag;
     }
 
-    private FragOperManager mFragOperManager;
-    private int mContainerId = -1;
-
     public void setContainerId(int containerId) {
-        this.mContainerId = containerId;
-    }
-
-    public FragOperManager getFragOperManager() {
-        if (this.mFragOperManager == null && this.mContainerId != -1) {
-            this.mFragOperManager = new FragOperManager(this, this.mContainerId);
-        }
-        return this.mFragOperManager;
+        FragOperManager.getInstance().setActivityAndContainerId(this, containerId);
     }
 
     //记录Fragment的位置

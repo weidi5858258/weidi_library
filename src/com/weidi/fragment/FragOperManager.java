@@ -11,8 +11,12 @@ import com.weidi.utils.EventBusUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import static android.R.attr.fragment;
 
 //import android.support.v4.app.Fragment;
 //import android.support.v4.app.FragmentActivity;
@@ -74,46 +78,86 @@ import java.util.List;
 public class FragOperManager implements Serializable {
 
     private static final String TAG = "FragOperManager";
+    private volatile static FragOperManager sFragOperManager;
     public static final int HIDE = 0;
     public static final int POPBACKSTACK = 1;
     public static final int POPBACKSTACKALL = 2;
 
+    private FragOperManager() {
+        EventBusUtils.register(this);
+        this.mMapList = new ArrayList<Map<Activity, Integer>>();
+        this.mFragmentsList = new ArrayList<Fragment>();
+    }
+
+    public static FragOperManager getInstance() {
+        if (sFragOperManager == null) {
+            synchronized (FragOperManager.class) {
+                if (sFragOperManager == null) {
+                    sFragOperManager = new FragOperManager();
+                }
+            }
+        }
+        return sFragOperManager;
+    }
+
     /**
      * FragmentActivity 实例
      */
-    private Activity mActivity;
-
-    /**
-     * BaseFragment 管理器
-     */
-    private FragmentManager fManager;
-
-    /**
-     * 装Fragment的容器
-     */
-    private int mContainerId;
-
+//    private Activity mActivity;
+    private List<Map<Activity, Integer>> mMapList;
     /**
      * 该Activity所有fragment的集合
      */
     private List<Fragment> mFragmentsList;
 
     /**
+     * BaseFragment 管理器
+     */
+//    private FragmentManager fManager;
+
+    /**
+     * 装Fragment的容器
+     */
+//    private int mContainerId;
+
+
+    /**
      * @param activity
      * @param containerId
      */
-    public FragOperManager(Activity activity, int containerId) {
+    /*public FragOperManager(Activity activity, int containerId) {
         if (activity == null) {
             throw new NullPointerException("FragOperManager's mActivity is null.");
         }
         if (containerId <= 0) {
             throw new IllegalArgumentException("FragOperManager's mContainerId is Invalid.");
         }
-        this.mActivity = activity;
-        this.mContainerId = containerId;
-        this.fManager = activity.getFragmentManager();
+//        this.mActivity = activity;
+//        this.mContainerId = containerId;
+//        this.fManager = activity.getFragmentManager();
         this.mFragmentsList = new ArrayList<Fragment>();
         EventBusUtils.register(this);
+    }*/
+    public void setActivityAndContainerId(Activity activity, int containerId) {
+        Map<Activity, Integer> map = new HashMap<Activity, Integer>();
+        map.put(activity, containerId);
+        this.mMapList.add(map);
+    }
+
+    public void removeActivity(Activity activity) {
+        if (activity == null
+                || mMapList == null
+                || mMapList.isEmpty()) {
+            return;
+        }
+        Iterator<Map<Activity, Integer>> iterator = mMapList.iterator();
+        while (iterator.hasNext()) {
+            Map<Activity, Integer> map = iterator.next();
+            if (map.containsKey(activity)) {
+                iterator.remove();
+                break;
+            }
+        }
     }
 
     public List<Fragment> getmFragmentsList() {
@@ -131,17 +175,33 @@ public class FragOperManager implements Serializable {
      * @param fragment
      * @param tag
      */
-    public void enter(Fragment fragment, String tag) {
-        if (fragment == null) {
-            throw new NullPointerException("要进入的fragment不能为null.");
+    public void enter(Activity activity, Fragment fragment, String tag) {
+        if (activity == null
+                || fragment == null
+                || mMapList == null
+                || mMapList.isEmpty()) {
+            return;
+        }
+        Iterator<Map<Activity, Integer>> iterator = mMapList.iterator();
+        int containerId = -1;
+        while (iterator.hasNext()) {
+            Map<Activity, Integer> map = iterator.next();
+            if (map.containsKey(activity)) {
+                containerId = map.get(activity);
+                break;
+            }
         }
 
-        FragmentTransaction fTransaction = fManager.beginTransaction();
+        if (containerId <= 0) {
+            return;
+        }
+
+        FragmentTransaction fTransaction = activity.getFragmentManager().beginTransaction();
         // 保证fragment在最后一个
         if (!mFragmentsList.contains(fragment)) {
             mFragmentsList.add(fragment);
             // 不用replace
-            fTransaction.add(mContainerId, fragment, tag);
+            fTransaction.add(containerId, fragment, tag);
             fTransaction.addToBackStack(tag);
         } else {
             mFragmentsList.remove(fragment);
@@ -176,11 +236,13 @@ public class FragOperManager implements Serializable {
      * @param tag
      * @param containerId
      */
-    public void enter2(Fragment fragment, String tag, int containerId) {
-        if (fragment == null) {
-            throw new NullPointerException("FragOperManager enter():fragment is null.");
+    public void enter2(Activity activity, Fragment fragment, String tag, int containerId) {
+        if (activity == null
+                || fragment == null) {
+            return;
         }
-        FragmentTransaction fTransaction = fManager.beginTransaction();
+
+        FragmentTransaction fTransaction = activity.getFragmentManager().beginTransaction();
         fTransaction.add(containerId, fragment, tag);
         fTransaction.show(fragment);
         fTransaction.commit();
@@ -200,16 +262,16 @@ public class FragOperManager implements Serializable {
     private Object onEvent(int what, Object[] object) {
         switch (what) {
             case HIDE:
-                if (object != null && object.length > 0) {
+                if (object != null && object.length >= 2) {
                     // 隐藏某个Fragment,而不是弹出.
-                    exit((Fragment) object[0], HIDE);
+                    exit((Activity) object[0], (Fragment) object[1], HIDE);
                 }
                 break;
 
             case POPBACKSTACK:
-                if (object != null && object.length > 0) {
+                if (object != null && object.length >= 2) {
                     // 弹出某个Fragment,而不是隐藏.
-                    exit((Fragment) object[0], POPBACKSTACK);
+                    exit((Activity) object[0], (Fragment) object[1], POPBACKSTACK);
                 }
                 break;
 
@@ -219,8 +281,8 @@ public class FragOperManager implements Serializable {
                 break;
 
             case 10000:
-                if (object != null && object.length > 0) {
-                    removeSomeOneFragment((String) object[0]);
+                if (object != null && object.length >= 2) {
+                    removeSomeOneFragment((Activity) object[0], (String) object[1]);
                 }
                 break;
 
@@ -233,7 +295,7 @@ public class FragOperManager implements Serializable {
      * @param fragment
      * @param exitType
      */
-    private void exit(Fragment fragment, int exitType) {
+    private void exit(Activity activity, Fragment fragment, int exitType) {
         if (fragment == null) {
             throw new NullPointerException("要进入的fragment不能为null.");
         }
@@ -243,6 +305,7 @@ public class FragOperManager implements Serializable {
             return;
         }
 
+        FragmentManager fManager = activity.getFragmentManager();
         FragmentTransaction fTransaction = fManager.beginTransaction();
         // 不需要先加载一个Fragment
         switch (exitType) {
@@ -318,15 +381,21 @@ public class FragOperManager implements Serializable {
         if (mFragmentsList == null || mFragmentsList.isEmpty()) {
             return;
         }
-
-        FragmentTransaction fTransaction = fManager.beginTransaction();
-        Iterator<Fragment> iterator = mFragmentsList.iterator();
+        Iterator<Map<Activity, Integer>> iterator = mMapList.iterator();
         while (iterator.hasNext()) {
-            Fragment fragment = iterator.next();
-            fTransaction.remove(fragment);
-            iterator.remove();
+            Map<Activity, Integer> map = iterator.next();
+            for (Map.Entry<Activity, Integer> entry : map.entrySet()) {
+                FragmentTransaction fTransaction =
+                        entry.getKey().getFragmentManager().beginTransaction();
+                Iterator<Fragment> iter = mFragmentsList.iterator();
+                while (iter.hasNext()) {
+                    Fragment fragment = iter.next();
+                    fTransaction.remove(fragment);
+                    iter.remove();
+                }
+                fTransaction.commit();
+            }
         }
-        fTransaction.commit();
     }
 
     /***
@@ -335,14 +404,14 @@ public class FragOperManager implements Serializable {
      FragmentB会显示不了,需要把之前的FragmentA给删除掉才可以.
      @param fragmentTag
      */
-    private void removeSomeOneFragment(String fragmentTag) {
+    private void removeSomeOneFragment(Activity activity, String fragmentTag) {
         if (TextUtils.isEmpty(fragmentTag)
                 || mFragmentsList == null
                 || mFragmentsList.isEmpty()) {
             return;
         }
         Fragment fragmentTemp = null;
-        FragmentTransaction fTransaction = fManager.beginTransaction();
+        FragmentTransaction fTransaction = activity.getFragmentManager().beginTransaction();
         for (Fragment fragment : mFragmentsList) {
             if (fragmentTag.equals(fragment.getClass().getSimpleName())) {
                 fragmentTemp = fragment;

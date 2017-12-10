@@ -12,7 +12,6 @@ import com.weidi.activity.base.BaseActivity;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
 import com.weidi.log.Log;
-import com.weidi.utils.EventBusUtils;
 
 /***
  *
@@ -20,7 +19,7 @@ import com.weidi.utils.EventBusUtils;
 public abstract class BaseFragment extends Fragment {
 
     private static final String TAG = "BaseFragment";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private Context mContext;
     private BackHandlerInterface mBackHandlerInterface;
     private boolean mIsNeedToDo = true;
@@ -186,15 +185,13 @@ public abstract class BaseFragment extends Fragment {
      * 被add()或者popBackStack()时不会回调这个方法
      * 弹窗时不会被回调(是由当前的Fragment弹出的一个DialogFragment)
      * 如果是弹出一个DialogActivity窗口,则应该会被回调,
-     * 因为当前Fragment所在的Activity的生命周期发生了变化,
-     * 则当前Fragment的生命周期也会发生变化
+     * 因为当前Fragment所在的Activity的生命周期发生了变化,则当前Fragment的生命周期也会发生变化
      *
      * @param hidden if true that mean hidden
      */
     @Override
     public void onHiddenChanged(boolean hidden) {
-        if (DEBUG)
-            Log.d(TAG, "onHiddenChanged():hidden = " + hidden);
+        if (DEBUG) Log.d(TAG, "onHiddenChanged():hidden = " + hidden);
         if (hidden) {
             onPause_();
         } else {
@@ -239,6 +236,18 @@ public abstract class BaseFragment extends Fragment {
      */
     protected void setNeedToDo(boolean isNeedToDo) {
         mIsNeedToDo = isNeedToDo;
+    }
+
+    public void enterFragment() {
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).enterActivity();
+        }
+    }
+
+    public void exitFragment() {
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).exitActivity();
+        }
     }
 
     protected abstract int provideLayout();

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Looper;
 
 import com.weidi.dbutil.SimpleDao;
+import com.weidi.fragment.FragOperManager;
 import com.weidi.log.Log;
 import com.weidi.utils.EventBusUtils;
 import com.weidi.utils.HandlerUtils;
@@ -38,6 +39,8 @@ public class WeidiApplication extends Application {
 
         HandlerUtils.init(Looper.getMainLooper());
         EventBusUtils.init();
+
+        FragOperManager.getInstance();
 
         Log.init();
 
