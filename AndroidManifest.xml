@@ -3,6 +3,7 @@
     package="com.weidi.library">
 
     <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name="com.weidi.application.WeidiApplication"
         android:allowBackup="true"
