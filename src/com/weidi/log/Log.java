@@ -21,13 +21,13 @@ public class Log {
      * }
      */
     private volatile static boolean mSwitch = true;
-    private volatile static String TAG = "com.weidi.artifact";
+    private volatile static String TAG = "com.cyanogenmod.eleven";
     private static BufferedWriter mBufferedWriter;
 
     public static void init() {
         mSwitch = true;
         try {
-            File file = new File("/data/data/com.weidi.artifact/files/artifact.log");
+            File file = new File("/data/data/com.cyanogenmod.eleven/files/eleven.log");
             if(!file.getParentFile().exists()){
                 file.getParentFile().mkdirs();
             }
