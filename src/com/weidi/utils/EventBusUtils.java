@@ -29,7 +29,7 @@ public class EventBusUtils {
         }
     }
 
-    public static void init(){
+    public static void init() {
         EventBus.getDefault();
     }
 
@@ -260,8 +260,7 @@ class EventBus {
             Message msg = HandlerUtils.getMessage();
             msg.what = what;
             msg.obj = EventBus.this;
-            HandlerUtils.setMessage(msg, new Object[]{clazz, objArray});
-            HandlerUtils.sendMessageSync(msg);
+            HandlerUtils.sendMessageSync(msg, new Object[]{clazz, objArray});
             return mObjResult;
         }
 
@@ -310,8 +309,7 @@ class EventBus {
         Message msg = HandlerUtils.getMessage();
         msg.what = what;
         msg.obj = EventBus.this;
-        HandlerUtils.setMessage(msg, new Object[]{clazz, objArray});
-        HandlerUtils.sendMessageDelayed(msg, delayMillis);
+        HandlerUtils.sendMessageDelayed(msg, delayMillis, objArray);
     }
 
     /***
@@ -336,8 +334,8 @@ class EventBus {
         Message msg = HandlerUtils.getMessage();
         msg.what = what;
         msg.obj = EventBus.this;
-        HandlerUtils.setMessage(msg, new Object[]{clazz, objArray, aAsyncResult});
-        HandlerUtils.sendMessageDelayed(msg, delayMillis);
+        HandlerUtils.sendMessageDelayed(
+                msg, delayMillis, new Object[]{clazz, objArray, aAsyncResult});
     }
 
     private void clear() {
