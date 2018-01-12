@@ -165,7 +165,8 @@ public class HandlerUtils {
         return InnerHandler.getInstance().sendEmptyMsgDelayed(object, what, delayMillis);
     }
 
-    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis, Object[] objArray) {
+    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis,
+                                                  Object[] objArray) {
         return InnerHandler.getInstance().sendEmptyMsgDelayed(object, what, delayMillis, objArray);
     }
 
@@ -173,7 +174,8 @@ public class HandlerUtils {
         return InnerHandler.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis);
     }
 
-    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis, Object[] objArray) {
+    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis,
+                                                 Object[] objArray) {
         return InnerHandler.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis, objArray);
     }
 

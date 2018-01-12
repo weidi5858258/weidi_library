@@ -122,7 +122,7 @@ class EventBus {
 
     private volatile static EventBus sEventBus;
 
-    public EventBus() {
+    EventBus() {
         clear();
 
         HandlerUtils.register(this, new HandlerUtils.Callback() {
@@ -135,7 +135,12 @@ class EventBus {
                     return;
                 }
                 if (objArray != null) {
-                    if (objArray.length == 2) {
+                    if (objArray.length == 1) {
+                        mObjResult = dispatchEvent(
+                                (Class) objArray[0],
+                                msg.what,
+                                null);
+                    } else if (objArray.length == 2) {
                         mObjResult = dispatchEvent(
                                 (Class) objArray[0],
                                 msg.what,
@@ -153,7 +158,7 @@ class EventBus {
         });
     }
 
-    public static EventBus getDefault() {
+    static EventBus getDefault() {
         if (sEventBus == null) {
             synchronized (EventBus.class) {
                 if (sEventBus == null) {
@@ -175,11 +180,13 @@ class EventBus {
      3.传递的数据都在主线程中执行
      */
 
+    private static final HashMap<Message, Object[]> mMsgMap =
+            new HashMap<Message, Object[]>();
     private static final HashMap<Object, Method> mClassMethodHashMap =
             new HashMap<Object, Method>();
     private Object mObjResult;
 
-    public synchronized void register(Object object) {
+    synchronized void register(Object object) {
         if (object == null) {
             throw new NullPointerException("EventBus register() : object = null");
         }
@@ -204,7 +211,7 @@ class EventBus {
         mClassMethodHashMap.put(object, method);
     }
 
-    public synchronized void unregister(Object object) {
+    synchronized void unregister(Object object) {
         if (object == null) {
             throw new NullPointerException("EventBus unregister() : class = null");
         }
@@ -230,7 +237,7 @@ class EventBus {
     /***
      * 不需要去调用
      */
-    public void onDestroy() {
+    void onDestroy() {
         Log.i(TAG, "onDestroy()");
         HandlerUtils.unregister(this);
     }
@@ -244,7 +251,7 @@ class EventBus {
      * @param what 消息标志
      * @param objArray 传递的数据 传给onEvent(int what, Object[] objArray)的参数.
      */
-    public Object postSync(
+    Object postSync(
             final Class clazz,
             final int what,
             final Object[] objArray) {
@@ -260,7 +267,8 @@ class EventBus {
             Message msg = HandlerUtils.getMessage();
             msg.what = what;
             msg.obj = EventBus.this;
-            HandlerUtils.sendMessageSync(msg, new Object[]{clazz, objArray});
+            HandlerUtils.sendMessageSync(
+                    msg, new Object[]{clazz, objArray});
             return mObjResult;
         }
 
@@ -274,7 +282,7 @@ class EventBus {
      * @param what 消息标志
      * @param objArray 传递的数据
      */
-    public void postAsync(
+    void postAsync(
             final Class clazz,
             final int what,
             final Object[] objArray) {
@@ -287,7 +295,7 @@ class EventBus {
      * @param what 消息标志
      * @param objArray 传递的数据
      */
-    public void postAsync(
+    void postAsync(
             final Class clazz,
             final int what,
             final Object[] objArray,
@@ -295,7 +303,7 @@ class EventBus {
         postDelayed(clazz, what, objArray, aAsyncResult, 0);
     }
 
-    public void postDelayed(
+    void postDelayed(
             final Class clazz,
             final int what,
             final Object[] objArray,
@@ -309,7 +317,8 @@ class EventBus {
         Message msg = HandlerUtils.getMessage();
         msg.what = what;
         msg.obj = EventBus.this;
-        HandlerUtils.sendMessageDelayed(msg, delayMillis, objArray);
+        HandlerUtils.sendMessageDelayed(
+                msg, delayMillis, new Object[]{clazz, objArray});
     }
 
     /***
@@ -318,7 +327,7 @@ class EventBus {
      * @param what 消息标志
      * @param objArray 传递的数据
      */
-    public void postDelayed(
+    void postDelayed(
             final Class clazz,
             final int what,
             final Object[] objArray,
@@ -338,7 +347,7 @@ class EventBus {
                 msg, delayMillis, new Object[]{clazz, objArray, aAsyncResult});
     }
 
-    private void clear() {
+    void clear() {
         if (mClassMethodHashMap != null) {
             synchronized (mClassMethodHashMap) {
                 mClassMethodHashMap.clear();

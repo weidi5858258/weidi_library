@@ -113,16 +113,20 @@ public class HandlerThreadUtils {
         return InnerHandlerThread.getInstance().sendEmptyMsgDelayed(object, what, delayMillis);
     }
 
-    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis, Object[] objArray) {
-        return InnerHandlerThread.getInstance().sendEmptyMsgDelayed(object, what, delayMillis, objArray);
+    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis,
+                                                  Object[] objArray) {
+        return InnerHandlerThread.getInstance().sendEmptyMsgDelayed(object, what, delayMillis,
+                objArray);
     }
 
     public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis) {
         return InnerHandlerThread.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis);
     }
 
-    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis, Object[] objArray) {
-        return InnerHandlerThread.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis, objArray);
+    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis,
+                                                 Object[] objArray) {
+        return InnerHandlerThread.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis,
+                objArray);
     }
 
     public static boolean sendMessageAtFrontOfQueue(Message msg) {
