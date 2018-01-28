@@ -55,11 +55,11 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     public void closeDb() {
         if (mReadableDb != null && mReadableDb.isOpen()) {
             mReadableDb.close();
-            mReadableDb = null;
+            // mReadableDb = null;
         }
         if (mWritableDb != null && mWritableDb.isOpen()) {
             mWritableDb.close();
-            mWritableDb = null;
+            // mWritableDb = null;
         }
     }
 

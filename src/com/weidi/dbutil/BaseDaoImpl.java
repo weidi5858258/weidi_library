@@ -7,19 +7,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.SparseArray;
-
-
-import com.weidi.log.Log;
-import com.weidi.utils.MyToast;
+import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-
-import static java.security.AccessController.getContext;
 
 /***
  Created by root on 16-7-31.
@@ -2216,7 +2209,7 @@ public class BaseDaoImpl extends ABaseDao {
     }
 
     private int checkDatabaseInitialization() {
-        if (DbUtils.getInstance().getInitializationState() ==
+        /*if (DbUtils.getInstance().getInitializationState() ==
                 DbUtils.INITIALIZING) {
             MyToast.show(INITIALIZING);
             return -1;
@@ -2224,7 +2217,7 @@ public class BaseDaoImpl extends ABaseDao {
                 DbUtils.INITIALIZATION_FAILED) {
             MyToast.show(INITIALIZATION_FAILED);
             return -1;
-        }
+        }*/
         return 0;
     }
 

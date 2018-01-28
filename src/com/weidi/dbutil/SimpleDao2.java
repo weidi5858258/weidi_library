@@ -10,12 +10,10 @@ import java.util.Map;
  * Created by root on 17-1-4.
  */
 
-public final class SimpleDao2 extends BaseDaoImpl {
+public final class SimpleDao2 extends BaseDaoImpl2 {
 
     private volatile static SimpleDao2 sSimpleDao;
     private static Context mContext;
-    private Class<?> clazz;
-
 
     private SimpleDao2(Context context) {
         super(context);
@@ -51,130 +49,130 @@ public final class SimpleDao2 extends BaseDaoImpl {
      *
      * @param clazz
      */
-    public void setClass(Class<?> clazz) {
+    public void setClass(Class clazz) {
         if (clazz == null) {
             throw new NullPointerException("设置的Class对象不能为null");
         }
-        this.clazz = clazz;
+        super.setClass(clazz);
     }
 
     public synchronized long add(Object object) {
-        return super.add(clazz, object);
+        return super.add(object);
     }
 
     public synchronized long add(ContentValues values) {
-        return super.add(clazz, values);
+        return super.add(values);
     }
 
     public synchronized int delete(int _id) {
-        return super.delete(clazz, _id);
+        return super.delete(_id);
     }
 
     public synchronized int delete(
             String primaryKey,
             String primaryValue) {
-        return super.delete(clazz, primaryKey, primaryValue);
+        return super.delete(primaryKey, primaryValue);
     }
 
     public synchronized int delete(Map<String, String> map) {
-        return super.delete(clazz, map);
+        return super.delete(map);
     }
 
     public synchronized int update(
             ContentValues values,
             String primaryKey,
             String primaryValue) {
-        return super.update(clazz, values, primaryKey, primaryValue);
+        return super.update(values, primaryKey, primaryValue);
     }
 
     public synchronized int update(
             ContentValues values,
             Map<String, String> map) {
-        return super.update(clazz, values, map);
+        return super.update(values, map);
     }
 
     public synchronized Object querySingle(int _id) {
-        return super.querySingle(clazz, _id);
+        return super.querySingle(_id);
     }
 
     public synchronized Object querySingle(
             Object object,
             boolean isIdPrimary) {
-        return super.querySingle(clazz, object, isIdPrimary);
+        return super.querySingle(object, isIdPrimary);
     }
 
     public synchronized Object querySingle(
             String primaryKey,
             String primaryValue) {
-        return super.querySingle(clazz, primaryKey, primaryValue);
+        return super.querySingle(primaryKey, primaryValue);
     }
 
     public synchronized Object querySingle(Map<String, String> map) {
-        return super.querySingle(clazz, map);
+        return super.querySingle(map);
     }
 
     public synchronized ArrayList queryMore(
             String primaryKey,
             String primaryValue) {
-        return super.queryMore(clazz, primaryKey, primaryValue);
+        return super.queryMore(primaryKey, primaryValue);
     }
 
     public synchronized ArrayList queryMore(
             Map<String, String> map) {
-        return super.queryMore(clazz, map);
+        return super.queryMore(map);
     }
 
     public synchronized ArrayList queryAll() {
-        return super.queryAll(clazz);
+        return super.queryAll();
     }
 
     public synchronized boolean isExists(
             String primaryKey,
             String primaryValue) {
-        return super.isExists(clazz, primaryKey, primaryValue);
+        return super.isExists(primaryKey, primaryValue);
     }
 
     public synchronized boolean isExists(
             Object object,
             boolean isIdPrimary) {
-        return super.isExists(clazz, object, isIdPrimary);
+        return super.isExists(object, isIdPrimary);
     }
 
     public synchronized boolean isExists(
             Map<String, String> map) {
-        return super.isExists(clazz, map);
+        return super.isExists(map);
     }
 
     public synchronized long getLastId() {
-        return super.getLastId(clazz);
+        return super.getLastId();
     }
 
     public synchronized long add2(
             Object object,
             String primaryKey,
             String primaryValue) {
-        return super.add2(clazz, object, primaryKey, primaryValue);
+        return super.add2(object, primaryKey, primaryValue);
     }
 
     public synchronized long add2OrUpdate(
             Object object,
             String primaryKey,
             String primaryValue) {
-        return super.add2OrUpdate(clazz, object, primaryKey, primaryValue);
+        return super.add2OrUpdate(object, primaryKey, primaryValue);
     }
 
     public synchronized long add2(
             ContentValues values,
             String primaryKey,
             String primaryValue) {
-        return super.add2(clazz, values, primaryKey, primaryValue);
+        return super.add2(values, primaryKey, primaryValue);
     }
 
     public synchronized long add2OrUpdate(
             ContentValues values,
             String primaryKey,
             String primaryValue) {
-        return super.add2OrUpdate(clazz, values, primaryKey, primaryValue);
+        return super.add2OrUpdate(values, primaryKey, primaryValue);
     }
 
 }

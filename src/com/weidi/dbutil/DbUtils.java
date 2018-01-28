@@ -22,9 +22,12 @@ import java.util.Map;
  <p>
  一般建议把"_id"设置成主键
  *
- @DbVersion(version = 0)
- public class Man {}
- @Primary private int _id;
+ @ClassVersion(version = 0)
+ public class Man {
+ @Primary <br>
+ // 从1开始递增
+ private int _id;
+ }
  <p>
  // 修改成功后在下个版本中删除掉
  // "name"是之前的属性名称,现在改成"sakura"
@@ -32,7 +35,9 @@ import java.util.Map;
  private String sakura;
  <p>
  开启线程操作
- DbUtils.getDefault().createOrUpdateDBWithVersion(getApplicationContext(), new Class[]{Man.class});
+ DbUtils.getDefault().createOrUpdateDBWithVersion(
+ getApplicationContext(),
+ new Class[]{Man.class});
  */
 
 public class DbUtils {
