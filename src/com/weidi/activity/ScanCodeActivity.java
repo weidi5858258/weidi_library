@@ -23,7 +23,7 @@ import com.google.zxing.decoding.InactivityTimer;
 import com.google.zxing.view.ViewfinderView;
 import com.weidi.activity.base.BaseActivity;
 import com.weidi.library.R;
-import com.weidi.log.Log;
+import com.weidi.log.MLog;
 import com.weidi.utils.MyToast;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (DEBUG) Log.d(TAG, "onCreate():savedInstanceState = " + savedInstanceState);
+        if (DEBUG) MLog.d(TAG, "onCreate():savedInstanceState = " + savedInstanceState);
 
         setContentView(R.layout.activity_scan_code);
         mSurfaceView = (SurfaceView)findViewById(R.id.preview_view);
@@ -68,19 +68,19 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     @Override
     public void onStart() {
         super.onStart();
-        if (DEBUG) Log.d(TAG, "onStart()");
+        if (DEBUG) MLog.d(TAG, "onStart()");
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (DEBUG) Log.d(TAG, "onRestart()");
+        if (DEBUG) MLog.d(TAG, "onRestart()");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (DEBUG) Log.d(TAG, "onResume()");
+        if (DEBUG) MLog.d(TAG, "onResume()");
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
         if (mHasSurface) {
             initCamera(surfaceHolder);
@@ -103,7 +103,7 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     @Override
     public void onPause() {
         super.onPause();
-        if (DEBUG) Log.d(TAG, "onPause()");
+        if (DEBUG) MLog.d(TAG, "onPause()");
         if (mCaptureActivityHandler != null) {
             mCaptureActivityHandler.quitSynchronously();
             mCaptureActivityHandler = null;
@@ -114,12 +114,12 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
     @Override
     public void onStop() {
         super.onStop();
-        if (DEBUG) Log.d(TAG, "onStop()");
+        if (DEBUG) MLog.d(TAG, "onStop()");
     }
 
     @Override
     public void onDestroy() {
-        if (DEBUG) Log.d(TAG, "onDestroy()");
+        if (DEBUG) MLog.d(TAG, "onDestroy()");
         mInactivityTimer.shutdown();
         if (mMediaPlayer != null) {
             if (mMediaPlayer.isPlaying()) {
@@ -134,7 +134,7 @@ public class ScanCodeActivity extends BaseActivity implements SurfaceHolder.Call
 
     @Override
     public void onBackPressed() {
-        if (DEBUG) Log.d(TAG, "onBackPressed()");
+        if (DEBUG) MLog.d(TAG, "onBackPressed()");
         finish();
         exitActivity();
     }

@@ -11,7 +11,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 
-import com.weidi.log.Log;
+import com.weidi.log.MLog;
 
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -75,7 +75,7 @@ public class CustomCrashHandler implements UncaughtExceptionHandler {
      */
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
-        Log.e(TAG, "系统错误", ex);
+        MLog.e(TAG, "系统错误", ex);
         if (!handleException(ex) && mDefaultHandler != null) {
             // 如果用户没有处理则让系统默认的异常处理器来处理
             mDefaultHandler.uncaughtException(thread, ex);
@@ -84,7 +84,7 @@ public class CustomCrashHandler implements UncaughtExceptionHandler {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
-                Log.e(TAG, "error : ", e);
+                MLog.e(TAG, "error : ", e);
             }
 
             //			 restartApp();
@@ -192,7 +192,7 @@ public class CustomCrashHandler implements UncaughtExceptionHandler {
         throwable.printStackTrace(mPrintWriter);
         mPrintWriter.close();
 
-        Log.e(TAG, mStringWriter.toString());
+        MLog.e(TAG, mStringWriter.toString());
         return mStringWriter.toString();
     }
 

@@ -64,8 +64,7 @@ public class JsonVolley<T> {
     /***
      JsonVolley.newInstance()
      .setHandler(mHandler)
-     .setURL("http://int.dpool.sina.com.cn/iplookup/iplookup" +
-     ".php?format=json&ip=218.4.255.255")
+     .setURL("http://int.dpool.sina.com.cn/iplookup/iplookup.php?format=json&ip=218.4.255.255")
      .setRequest(null)
      .setResponseClass(ResponseData.class)
      .setIDataCallback(new ACustomerCallback<ResponseData>() {

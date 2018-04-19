@@ -4,6 +4,17 @@
 
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- wifi控制和状态权限 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- 网络状态改变的权限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- 6.0以上打开蓝牙和wifi最好加上定位权限，获取wifi列表要用 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 获取IP地址 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:name="com.weidi.application.WeidiApplication"
         android:allowBackup="true"

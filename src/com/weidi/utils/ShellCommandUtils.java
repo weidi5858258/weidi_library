@@ -1,6 +1,6 @@
 package com.weidi.utils;
 
-import com.weidi.log.Log;
+import com.weidi.log.MLog;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -81,19 +81,19 @@ public class ShellCommandUtils {
             while ((s = errorResult.readLine()) != null) errorMsg.append(s);
             commandResult.successMsg = successMsg.toString();
             commandResult.errorMsg = errorMsg.toString();
-            Log.i(TAG, commandResult.result + " | " + commandResult.successMsg
+            MLog.i(TAG, commandResult.result + " | " + commandResult.successMsg
                     + " | " + commandResult.errorMsg);
         } catch (IOException e) {
             String errmsg = e.getMessage();
             if (errmsg != null) {
-                Log.e(TAG, errmsg);
+                MLog.e(TAG, errmsg);
             } else {
                 e.printStackTrace();
             }
         } catch (Exception e) {
             String errmsg = e.getMessage();
             if (errmsg != null) {
-                Log.e(TAG, errmsg);
+                MLog.e(TAG, errmsg);
             } else {
                 e.printStackTrace();
             }
@@ -105,7 +105,7 @@ public class ShellCommandUtils {
             } catch (IOException e) {
                 String errmsg = e.getMessage();
                 if (errmsg != null) {
-                    Log.e(TAG, errmsg);
+                    MLog.e(TAG, errmsg);
                 } else {
                     e.printStackTrace();
                 }

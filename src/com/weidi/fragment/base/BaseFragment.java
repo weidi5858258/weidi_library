@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import com.weidi.activity.base.BaseActivity;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
-import com.weidi.log.Log;
+import com.weidi.log.MLog;
 
 /***
  *
@@ -45,7 +45,7 @@ public abstract class BaseFragment extends Fragment {
             throw new NullPointerException("BaseFragment onAttach():activity is null.");
         }
         if (DEBUG)
-            Log.d(TAG, "onAttach(): activity = " + activity);
+            MLog.d(TAG, "onAttach(): activity = " + activity);
         mContext = activity.getApplicationContext();
         if (!(activity instanceof BackHandlerInterface)) {
             throw new ClassCastException("Hosting Activity must implement BackHandlerInterface");
@@ -81,7 +81,7 @@ public abstract class BaseFragment extends Fragment {
          */
         setRetainInstance(true);
         if (DEBUG)
-            Log.d(TAG, "onCreate(): savedInstanceState = " + savedInstanceState);
+            MLog.d(TAG, "onCreate(): savedInstanceState = " + savedInstanceState);
     }
 
     @Override
@@ -91,7 +91,7 @@ public abstract class BaseFragment extends Fragment {
             Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         if (DEBUG)
-            Log.d(TAG, "onCreateView(): savedInstanceState = " + savedInstanceState);
+            MLog.d(TAG, "onCreateView(): savedInstanceState = " + savedInstanceState);
         // 如果写成inflater.inflate(provideLayout(), container)这样的话,
         // 那么会报异常,具体异常就是已经有一个子类的parent,添加之前先要移除这个parent.
         View view = null;
@@ -107,7 +107,7 @@ public abstract class BaseFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (DEBUG)
-            Log.d(TAG, "onActivityCreated(): savedInstanceState = " + savedInstanceState);
+            MLog.d(TAG, "onActivityCreated(): savedInstanceState = " + savedInstanceState);
     }
 
     /*********************************
@@ -118,7 +118,7 @@ public abstract class BaseFragment extends Fragment {
     public void onStart() {
         super.onStart();
         if (DEBUG)
-            Log.d(TAG, "onStart()");
+            MLog.d(TAG, "onStart()");
     }
 
     /*********************************
@@ -149,7 +149,7 @@ public abstract class BaseFragment extends Fragment {
     public void onStop() {
         super.onStop();
         if (DEBUG)
-            Log.d(TAG, "onStop()");
+            MLog.d(TAG, "onStop()");
     }
 
     /*********************************
@@ -160,21 +160,21 @@ public abstract class BaseFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (DEBUG)
-            Log.d(TAG, "onDestroyView()");
+            MLog.d(TAG, "onDestroyView()");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         if (DEBUG)
-            Log.d(TAG, "onDestroy()");
+            MLog.d(TAG, "onDestroy()");
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         if (DEBUG)
-            Log.d(TAG, "onDetach()");
+            MLog.d(TAG, "onDetach()");
     }
 
     /**
@@ -191,7 +191,7 @@ public abstract class BaseFragment extends Fragment {
      */
     @Override
     public void onHiddenChanged(boolean hidden) {
-        if (DEBUG) Log.d(TAG, "onHiddenChanged():hidden = " + hidden);
+        if (DEBUG) MLog.d(TAG, "onHiddenChanged():hidden = " + hidden);
         if (hidden) {
             onPause_();
         } else {
@@ -203,7 +203,7 @@ public abstract class BaseFragment extends Fragment {
     // 写这个方法只是为了不直接调用onResume()方法
     private void onResume_() {
         if (DEBUG)
-            Log.d(TAG, "onResume(): " + this);
+            MLog.d(TAG, "onResume(): " + this);
         if (mBackHandlerInterface != null && mIsNeedToDo) {
             mBackHandlerInterface.setSelectedFragment(this, this.getClass().getName());
         }
@@ -211,7 +211,7 @@ public abstract class BaseFragment extends Fragment {
 
     private void onPause_() {
         if (DEBUG)
-            Log.d(TAG, "onPause(): " + this);
+            MLog.d(TAG, "onPause(): " + this);
     }
 
     public Context getContext() {

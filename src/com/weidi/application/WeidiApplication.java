@@ -6,10 +6,11 @@ import android.os.Looper;
 
 import com.weidi.dbutil.SimpleDao;
 import com.weidi.fragment.FragOperManager;
-import com.weidi.log.Log;
+import com.weidi.log.MLog;
 import com.weidi.utils.EventBusUtils;
 import com.weidi.utils.HandlerUtils;
 import com.weidi.utils.MyToast;
+import com.weidi.wifi.WifiUtils;
 
 /**
  * Created by root on 17-4-15.
@@ -27,7 +28,7 @@ public class WeidiApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "onCreate()");
+        MLog.i(TAG, "onCreate()");
 
         // 数据库
         SimpleDao.setContext(this);
@@ -42,7 +43,9 @@ public class WeidiApplication extends Application {
 
         FragOperManager.getInstance();
 
-        Log.init();
+        MLog.init();
+
+        WifiUtils.init(this);
 
         mContext = getApplicationContext();
     }

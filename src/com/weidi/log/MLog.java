@@ -5,15 +5,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
-public class Log {
+public class MLog {
 
-    /**
-     * if(Log.isSwitch()){
+    /***
+     * if(MLog.isSwitch()){
      * StackTraceElement[] mStackTraceElement = Thread.currentThread().getStackTrace();
      * if (mStackTraceElement != null && mStackTraceElement.length >= 2) {
      * StackTraceElement mStackTraceElement1 = (StackTraceElement) mStackTraceElement[1];
      * StackTraceElement mStackTraceElement2 = (StackTraceElement) mStackTraceElement[2];
-     * Log.d(mStackTraceElement1.getClassName()+"."+mStackTraceElement1.getMethodName()
+     * MLog.d(mStackTraceElement1.getClassName()+"."+mStackTraceElement1.getMethodName()
      * +" <--- " + mStackTraceElement2.getClassName()
      * + "." + mStackTraceElement2.getMethodName()
      * + " " + mStackTraceElement2.getLineNumber());
@@ -21,21 +21,23 @@ public class Log {
      * }
      */
     private volatile static boolean mSwitch = true;
-    private volatile static String TAG = "com.cyanogenmod.eleven";
+    private volatile static String TAG = "com.weidi.artifact";
+    private static final String TAG_FLAG = "---------->";
     private static BufferedWriter mBufferedWriter;
 
     public static void init() {
         mSwitch = true;
         try {
-            File file = new File("/data/data/com.cyanogenmod.eleven/files/eleven.log");
-            if(!file.getParentFile().exists()){
+            File file = new File("/data/data/" + TAG + "/files/file_log.txt");
+            if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdirs();
             }
             if (!file.exists()) {
                 file.createNewFile();
             }
             mBufferedWriter = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(file, true)));
+                    new OutputStreamWriter(
+                            new FileOutputStream(file, true)));
         } catch (Exception e) {
             e.printStackTrace();
             mBufferedWriter = null;
@@ -54,52 +56,52 @@ public class Log {
 
     public static void v(String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.v(TAG, "---------->" + msg);
+            android.util.Log.v(TAG, TAG_FLAG + msg);
     }
 
     public static void v(String tag, String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.v(tag == null ? TAG : tag, "---------->" + msg);
+            android.util.Log.v(tag == null ? TAG : tag, TAG_FLAG + msg);
     }
 
     public static void d(String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.d(TAG, "---------->" + msg);
+            android.util.Log.d(TAG, TAG_FLAG + msg);
     }
 
     public static void d(String tag, String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.d(tag == null ? TAG : tag, "---------->" + msg);
+            android.util.Log.d(tag == null ? TAG : tag, TAG_FLAG + msg);
     }
 
     public static void i(String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.i(TAG, "---------->" + msg);
+            android.util.Log.i(TAG, TAG_FLAG + msg);
     }
 
     public static void i(String tag, String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.i(tag == null ? TAG : tag, "---------->" + msg);
+            android.util.Log.i(tag == null ? TAG : tag, TAG_FLAG + msg);
     }
 
     public static void w(String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.w(TAG, "---------->" + msg);
+            android.util.Log.w(TAG, TAG_FLAG + msg);
     }
 
     public static void w(String tag, String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.w(tag == null ? TAG : tag, "---------->" + msg);
+            android.util.Log.w(tag == null ? TAG : tag, TAG_FLAG + msg);
     }
 
     public static void e(String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.e(TAG, "---------->" + msg);
+            android.util.Log.e(TAG, TAG_FLAG + msg);
     }
 
     public static void e(String tag, String msg) {
         if (mSwitch && msg != null)
-            android.util.Log.e(tag == null ? TAG : tag, "---------->" + msg);
+            android.util.Log.e(tag == null ? TAG : tag, TAG_FLAG + msg);
     }
 
     /**********************************************************************************************/

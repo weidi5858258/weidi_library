@@ -435,9 +435,9 @@ class InnerHandler extends Handler {
             synchronized (InnerHandler.this) {
                 mMsgsList.add(msg);
                 /*if (printLog)
-                    Log.i(TAG, "sendMsgAtTime " + msg.toString());
+                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
                 if (printLog)
-                    Log.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
+                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
             }
         }
         return sendMessageAtTime(msg, uptimeMillis);
@@ -452,9 +452,9 @@ class InnerHandler extends Handler {
             synchronized (InnerHandler.this) {
                 mMsgsList.add(msg);
                 /*if (printLog)
-                    Log.i(TAG, "sendMsgAtTime " + msg.toString());
+                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
                 if (printLog)
-                    Log.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
+                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
             }
         }
         mMsgMap.put(msg, objArray);
