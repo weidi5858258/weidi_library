@@ -1,6 +1,5 @@
 package com.weidi.fragment;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -8,7 +7,7 @@ import android.app.FragmentTransaction;
 import android.text.TextUtils;
 
 import com.weidi.library.R;
-import com.weidi.utils.EventBusUtils;
+import com.weidi.eventbus.EventBusUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,8 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import static android.R.attr.fragment;
 
 //import android.support.v4.app.Fragment;
 //import android.support.v4.app.FragmentActivity;

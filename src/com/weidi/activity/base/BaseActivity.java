@@ -10,8 +10,8 @@ import com.weidi.fragment.FragOperManager;
 import com.weidi.fragment.base.BaseFragment;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
-import com.weidi.utils.EventBusUtils;
-import com.weidi.utils.HandlerUtils;
+import com.weidi.eventbus.EventBusUtils;
+import com.weidi.handler.HandlerUtils;
 
 import java.util.HashMap;
 import java.util.List;

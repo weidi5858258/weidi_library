@@ -1,4 +1,4 @@
-package com.weidi.utils;
+package com.weidi.handler;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -68,7 +68,7 @@ public class HandlerUtils {
      * @param object
      * @param callback
      */
-    public static void register(Object object, Callback callback) {
+    public static void register(Object object, HandlerUtils.Callback callback) {
         InnerHandler.getInstance().addCallback(object, callback);
     }
 
@@ -91,6 +91,10 @@ public class HandlerUtils {
      */
     public static Message getMessage() {
         return InnerHandler.getInstance().getMsg();
+    }
+
+    public static Message getMessage(int what) {
+        return InnerHandler.getInstance().getMsg(what);
     }
 
     /***
@@ -266,12 +270,26 @@ class InnerHandler extends Handler {
     }
 
     final Message getMsg() {
+        /*Message msg = null;
+        if (sMessage == null) {
+            msg = this.obtainMessage();
+            sMessage = msg;
+        } else {
+            msg = Message.obtain(sMessage);
+        }*/
+        return getMsg(Integer.MIN_VALUE);
+    }
+
+    final Message getMsg(int what) {
         Message msg = null;
         if (sMessage == null) {
             msg = this.obtainMessage();
             sMessage = msg;
         } else {
             msg = Message.obtain(sMessage);
+        }
+        if (msg != null) {
+            msg.what = what;
         }
         return msg;
     }

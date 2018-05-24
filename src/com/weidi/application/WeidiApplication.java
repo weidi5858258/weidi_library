@@ -7,8 +7,8 @@ import android.os.Looper;
 import com.weidi.dbutil.SimpleDao;
 import com.weidi.fragment.FragOperManager;
 import com.weidi.log.MLog;
-import com.weidi.utils.EventBusUtils;
-import com.weidi.utils.HandlerUtils;
+import com.weidi.eventbus.EventBusUtils;
+import com.weidi.handler.HandlerUtils;
 import com.weidi.utils.MyToast;
 import com.weidi.wifi.WifiUtils;
 

@@ -1,4 +1,4 @@
-package com.weidi.utils;
+package com.weidi.handler;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -21,6 +21,9 @@ public class HandlerThreadUtils {
         void handleMessage(Message msg, Object[] objArray);
     }
 
+    /***
+     * 在Application中初始化
+     */
     public static void init() {
         InnerHandlerThread.getInstance().startHandlerThread();
     }
@@ -30,9 +33,9 @@ public class HandlerThreadUtils {
      * 在其他类（没有生命周期的类）中使用时，
      * 使用完这个类，需要主动调用一下unregister()方法
      * @param object
-     * @param callback
+     * @param callback 不能为null,因为发送消息后总要有个地方处理事件
      */
-    public static void register(Object object, Callback callback) {
+    public static void register(Object object, HandlerThreadUtils.Callback callback) {
         InnerHandlerThread.getInstance().addCallback(object, callback);
     }
 
@@ -55,6 +58,10 @@ public class HandlerThreadUtils {
      */
     public static Message getMessage() {
         return InnerHandlerThread.getInstance().getMsg();
+    }
+
+    public static Message getMessage(int what) {
+        return InnerHandlerThread.getInstance().getMsg(what);
     }
 
     /***
@@ -216,12 +223,26 @@ final class InnerHandlerThread extends HandlerThread {
     }
 
     final Message getMsg() {
+        /*Message msg = null;
+        if (sMessage == null) {
+            msg = getHandler().obtainMessage();
+            sMessage = msg;
+        } else {
+            msg = Message.obtain(sMessage);
+        }*/
+        return getMsg(Integer.MIN_VALUE);
+    }
+
+    final Message getMsg(int what) {
         Message msg = null;
         if (sMessage == null) {
             msg = getHandler().obtainMessage();
             sMessage = msg;
         } else {
             msg = Message.obtain(sMessage);
+        }
+        if (msg != null) {
+            msg.what = what;
         }
         return msg;
     }
