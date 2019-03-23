@@ -35,7 +35,7 @@ public abstract class RecyclerViewAdapter<T> extends RecyclerView.Adapter<Custom
         ILayoutManager,
         IHeaderFooter {
 
-    private static final String TAG = "RecyclerViewAdapter";
+    private static final String TAG = RecyclerViewAdapter.class.getSimpleName();
 
     protected final Context mContext;
     protected List<T> mData;

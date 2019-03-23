@@ -31,10 +31,12 @@ import java.util.List;
 
  @param <T> javaBean
  */
-public abstract class CustomRecyclerViewAdapter<T> extends RecyclerViewAdapter<T> implements
+public abstract class CustomRecyclerViewAdapter<T> extends RecyclerViewAdapter<T>
+        implements
         CRUD<T> {
 
-    private static final String TAG = "CustomRecyclerViewAdapter";
+    private static final String TAG =
+            CustomRecyclerViewAdapter.class.getSimpleName();
 
     private LayoutInflater mLayoutInflater;
 
