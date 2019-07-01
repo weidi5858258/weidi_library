@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.weidi.handler.HandlerUtils;
@@ -15,6 +16,16 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+/***
+ private Object onEvent(int what, Object[] objArray) {
+ Object result = null;
+ switch (what){
+ default:
+ }
+ return result;
+ }
+ */
 
 public class EventBusUtils {
 
@@ -53,72 +64,104 @@ public class EventBusUtils {
     }
 
     /***
-     * 同步,有结果返回
-     * 这里"同步"的意思是A处调用postSync()方法后
-     * 只有等到消息接收处的代码执行完并返回结果了,
-     * 才会再继续执行A处下面的代码
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据 传给onEvent(int what, Object[] objArray)的参数.
+     能得到结果(代码可能在UI线程或者Thread线程)
+     @param what 消息标志
+     @param objArray 传递的数据 传给onEvent(int what, Object[] objArray)的参数.
      */
-    public static Object postSync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray) {
-        return EventBus.getDefault().postSync(clazz, what, objArray);
+    public static Object post(final Class clazz,
+                              final int what,
+                              final Object[] objArray) {
+        return EventBus.getDefault().post(clazz, what, objArray);
     }
 
     /***
-     * 不需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
+     能得到结果(代码可能在UI线程或者Thread线程)
      */
-    public static void postAsync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray) {
-        EventBus.getDefault().postAsync(clazz, what, objArray);
+    public static Object post(final Object object,
+                              final int what,
+                              final Object[] objArray) {
+        return EventBus.getDefault().post(object, what, objArray);
     }
 
     /***
-     * 需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
+     调用此方法是在UI线程时能得到结果,否则为null
      */
-    public static void postAsync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final AAsyncResult aAsyncResult) {
-        EventBus.getDefault().postAsync(clazz, what, objArray, aAsyncResult);
-    }
-
-    public static void postDelayed(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final long delayMillis) {
-        EventBus.getDefault().postDelayed(clazz, what, objArray, delayMillis);
+    public static Object postUi(final Class clazz,
+                                final int what,
+                                final Object[] objArray) {
+        return EventBus.getDefault().postUi(clazz, what, objArray);
     }
 
     /***
-     * 需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
+     调用此方法是在UI线程时能得到结果,否则为null
      */
-    public static void postDelayed(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final AAsyncResult aAsyncResult,
-            final long delayMillis) {
-        EventBus.getDefault().postDelayed(clazz, what, objArray, aAsyncResult, delayMillis);
+    public static Object postUi(final Object object,
+                                final int what,
+                                final Object[] objArray) {
+        return EventBus.getDefault().postUi(object, what, objArray);
+    }
+
+    /***
+     返回结果为null
+     */
+    public static Object postUiDelayed(final Class clazz,
+                                       final int what,
+                                       long delayMillis,
+                                       final Object[] objArray) {
+        return EventBus.getDefault().postUiDelayed(clazz, what, delayMillis, objArray);
+    }
+
+    /***
+     返回结果为null
+     */
+    public static Object postUiDelayed(final Object object,
+                                       final int what,
+                                       long delayMillis,
+                                       final Object[] objArray) {
+        return EventBus.getDefault().postUiDelayed(object, what, delayMillis, objArray);
+    }
+
+    /***
+     调用此方法是在Thread线程时能得到结果,否则为null
+     */
+    public static Object postThread(final Class clazz,
+                                    final int what,
+                                    final Object[] objArray) {
+        return EventBus.getDefault().postThread(clazz, what, objArray);
+    }
+
+    /***
+     调用此方法是在Thread线程时能得到结果,否则为null
+     */
+    public static Object postThread(final Object object,
+                                    final int what,
+                                    final Object[] objArray) {
+        return EventBus.getDefault().postThread(object, what, objArray);
+    }
+
+    /***
+     返回结果为null
+     */
+    public static Object postThreadDelayed(final Class clazz,
+                                           final int what,
+                                           long delayMillis,
+                                           final Object[] objArray) {
+        return EventBus.getDefault().postThreadDelayed(clazz, what, delayMillis, objArray);
+    }
+
+    /***
+     返回结果为null
+     */
+    public static Object postThreadDelayed(final Object object,
+                                           final int what,
+                                           long delayMillis,
+                                           final Object[] objArray) {
+        return EventBus.getDefault().postThreadDelayed(object, what, delayMillis, objArray);
     }
 
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 class EventBus {
 
@@ -204,10 +247,14 @@ class EventBus {
      3.传递的数据都在主线程中执行
      */
 
-    private static final HashMap<Message, Object[]> mMsgMap =
+    private static final HashMap<Message, Object[]> mThreadMsgMap =
+            new HashMap<Message, Object[]>();
+    private static final HashMap<Message, Object[]> mUiMsgMap =
             new HashMap<Message, Object[]>();
     private static final HashMap<Object, Method> mObjectMethodMap =
             new HashMap<Object, Method>();
+    private volatile static Message sUiMessage = null;
+    private volatile static Message sThreadMessage = null;
     private Object mObjResult;
 
     synchronized void register(Object object) {
@@ -263,7 +310,9 @@ class EventBus {
      */
     void onDestroy() {
         Log.i(TAG, "onDestroy()");
-        HandlerUtils.unregister(EventBus.class);
+        if (mHandlerThread != null) {
+            mHandlerThread.quit();
+        }
     }
 
     /***
@@ -276,121 +325,177 @@ class EventBus {
     Object post(final Class clazz,
                 final int what,
                 final Object[] objArray) {
-        if (clazz == null) {
-            throw new NullPointerException("EventBus post() class = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
-            return null;
-        }
-
         return dispatchEvent(clazz, what, objArray);
     }
 
     Object post(final Object object,
                 final int what,
                 final Object[] objArray) {
-        if (object == null) {
-            throw new NullPointerException("EventBus post() object = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+        return dispatchEvent(object, what, objArray);
+    }
+
+    Object postUi(final Class clazz,
+                  final int what,
+                  final Object[] objArray) {
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            return dispatchEvent(clazz, what, objArray);
+        } else {
+            sendMsgAtTimeByUi(
+                    getUiMsg(clazz, what), SystemClock.uptimeMillis(), objArray);
             return null;
         }
-
-        return dispatchEvent(object, what, objArray);
     }
 
     Object postUi(final Object object,
                   final int what,
                   final Object[] objArray) {
-        if (object == null) {
-            throw new NullPointerException("EventBus post() object = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            return dispatchEvent(object, what, objArray);
+        } else {
+            sendMsgAtTimeByUi(
+                    getUiMsg(object, what), SystemClock.uptimeMillis(), objArray);
             return null;
         }
+    }
 
+    Object postUiDelayed(final Class clazz,
+                         final int what,
+                         long delayMillis,
+                         final Object[] objArray) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        sendMsgAtTimeByUi(
+                getUiMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, objArray);
         return null;
+    }
+
+    Object postUiDelayed(final Object object,
+                         final int what,
+                         long delayMillis,
+                         final Object[] objArray) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        sendMsgAtTimeByUi(
+                getUiMsg(object, what), SystemClock.uptimeMillis() + delayMillis, objArray);
+        return null;
+    }
+
+    Object postThread(final Class clazz,
+                      final int what,
+                      final Object[] objArray) {
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            sendMsgAtTimeByThread(
+                    getThreadMsg(clazz, what), SystemClock.uptimeMillis(), objArray);
+            return null;
+        } else {
+            return dispatchEvent(clazz, what, objArray);
+        }
     }
 
     Object postThread(final Object object,
                       final int what,
                       final Object[] objArray) {
-        if (object == null) {
-            throw new NullPointerException("EventBus post() object = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            sendMsgAtTimeByThread(
+                    getThreadMsg(object, what), SystemClock.uptimeMillis(), objArray);
             return null;
+        } else {
+            return dispatchEvent(object, what, objArray);
         }
+    }
 
+    Object postThreadDelayed(final Class clazz,
+                             final int what,
+                             long delayMillis,
+                             final Object[] objArray) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        sendMsgAtTimeByThread(
+                getThreadMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, objArray);
         return null;
     }
 
-    /***
-     * 不需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
-     */
-    void postAsync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray) {
-        postDelayed(clazz, what, objArray, 0);
+    Object postThreadDelayed(final Object object,
+                             final int what,
+                             long delayMillis,
+                             final Object[] objArray) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        sendMsgAtTimeByThread(
+                getThreadMsg(object, what), SystemClock.uptimeMillis() + delayMillis, objArray);
+        return null;
     }
 
-    /***
-     * 需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
-     */
-    void postAsync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final EventBusUtils.AAsyncResult aAsyncResult) {
-        postDelayed(clazz, what, objArray, aAsyncResult, 0);
+    private final Message getThreadMsg() {
+        Message msg = null;
+        if (sThreadMessage == null) {
+            msg = mThreadHandler.obtainMessage();
+            sThreadMessage = msg;
+        } else {
+            msg = Message.obtain(sThreadMessage);
+        }
+        return msg;
     }
 
-    void postDelayed(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final long delayMillis) {
-        if (clazz == null) {
-            throw new NullPointerException("EventBus post() : class = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
-            return;
-        }
-        HandlerUtils.sendEmptyMessageDelayed(
-                EventBus.class, what, delayMillis, new Object[]{clazz, objArray});
-    }
-
-    /***
-     * 需要返回结果
-     *
-     * @param what 消息标志
-     * @param objArray 传递的数据
-     */
-    void postDelayed(
-            final Class clazz,
-            final int what,
-            final Object[] objArray,
-            final EventBusUtils.AAsyncResult aAsyncResult,
-            final long delayMillis) {
-        if (clazz == null) {
-            throw new NullPointerException("EventBus post() : class = null");
-        }
-        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
-            return;
-        }
-
-        Message msg = HandlerUtils.getMessage();
+    private final Message getThreadMsg(Class clazz, int what) {
+        Message msg = getThreadMsg();
+        msg.obj = clazz;
         msg.what = what;
-        msg.obj = EventBus.this;
-        HandlerUtils.sendMessageDelayed(
-                msg, delayMillis, new Object[]{clazz, objArray, aAsyncResult});
+        return msg;
+    }
+
+    private final Message getThreadMsg(Object object, int what) {
+        Message msg = getThreadMsg();
+        msg.obj = object;
+        msg.what = what;
+        return msg;
+    }
+
+    private final Message getUiMsg() {
+        Message msg = null;
+        if (sUiMessage == null) {
+            msg = mUiHandler.obtainMessage();
+            sUiMessage = msg;
+        } else {
+            msg = Message.obtain(sUiMessage);
+        }
+        return msg;
+    }
+
+    private final Message getUiMsg(Class clazz, int what) {
+        Message msg = getUiMsg();
+        msg.obj = clazz;
+        msg.what = what;
+        return msg;
+    }
+
+    private final Message getUiMsg(Object object, int what) {
+        Message msg = getUiMsg();
+        msg.obj = object;
+        msg.what = what;
+        return msg;
+    }
+
+    private final boolean sendMsgAtTimeByThread(final Message msg,
+                                                final long uptimeMillis,
+                                                final Object[] objArray) {
+        synchronized (mThreadMsgMap) {
+            mThreadMsgMap.put(msg, objArray);
+        }
+        return mThreadHandler.sendMessageAtTime(msg, uptimeMillis);
+    }
+
+    private final boolean sendMsgAtTimeByUi(final Message msg,
+                                            final long uptimeMillis,
+                                            final Object[] objArray) {
+        synchronized (mUiMsgMap) {
+            mUiMsgMap.put(msg, objArray);
+        }
+        return mUiHandler.sendMessageAtTime(msg, uptimeMillis);
     }
 
     void clear() {
@@ -402,18 +507,20 @@ class EventBus {
     }
 
     private Object dispatchEvent(Class clazz, int what, Object[] objArray) {
-        String sampleName = clazz.getSimpleName();
-
-        Iterator<Map.Entry<Object, Method>> iter = null;
-        iter = mObjectMethodMap.entrySet().iterator();
-        if (iter == null) {
+        if (clazz == null) {
             return null;
         }
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+
+        String sampleName = clazz.getSimpleName();
+        Iterator<Map.Entry<Object, Method>> iterator = mObjectMethodMap.entrySet().iterator();
+        if (iterator == null) {
+            return null;
+        }
+        while (iterator.hasNext()) {
+            Map.Entry<Object, Method> entry = iterator.next();
             Object keyObject = entry.getKey();
             if (keyObject.getClass().getSimpleName().equals(sampleName)) {
-                Method method = (Method) entry.getValue();
+                Method method = entry.getValue();
                 try {
                     /***
                      这里可能还有bug.就是keyObject是Activity或者Fragment时,
@@ -438,6 +545,7 @@ class EventBus {
                 break;
             }
         }
+
         return null;
     }
 
@@ -450,6 +558,10 @@ class EventBus {
      * @return
      */
     private Object dispatchEvent(Object object, int what, Object[] objArray) {
+        if (object == null) {
+            return null;
+        }
+
         Method method = mObjectMethodMap.get(object);
         try {
             /***
@@ -477,6 +589,22 @@ class EventBus {
         if (msg == null) {
             return;
         }
+
+        Object object = msg.obj;
+        if (object == null) {
+            return;
+        }
+
+        Object[] objArray = mThreadMsgMap.get(msg);
+        if (object instanceof Class) {
+            dispatchEvent((Class) msg.obj, msg.what, objArray);
+        } else {
+            dispatchEvent(msg.obj, msg.what, objArray);
+        }
+
+        synchronized (mThreadMsgMap) {
+            mThreadMsgMap.remove(msg);
+        }
     }
 
     private void uiHandleMessage(Message msg) {
@@ -484,34 +612,21 @@ class EventBus {
             return;
         }
 
-        if (objArray != null) {
-            if (objArray.length == 1) {
-                mObjResult = dispatchEvent(
-                        (Class) objArray[0],
-                        msg.what,
-                        null);
-            } else if (objArray.length == 2) {
-                mObjResult = dispatchEvent(
-                        (Class) objArray[0],
-                        msg.what,
-                        (Object[]) objArray[1]);
-            }
-            if (objArray.length == 3) {
-                if (objArray[2] != null) {
-                    ((EventBusUtils.AAsyncResult) objArray[2]).onResult(mObjResult);
-                }
-            }
+        Object object = msg.obj;
+        if (object == null) {
+            return;
+        }
+
+        Object[] objArray = mUiMsgMap.get(msg);
+        if (object instanceof Class) {
+            dispatchEvent((Class) msg.obj, msg.what, objArray);
+        } else {
+            dispatchEvent(msg.obj, msg.what, objArray);
+        }
+
+        synchronized (mUiMsgMap) {
+            mUiMsgMap.remove(msg);
         }
     }
-
-    /***
-     private Object onEvent(int what, Object[] objArray) {
-     Object result = null;
-     switch (what){
-     default:
-     }
-     return result;
-     }
-     */
 
 }

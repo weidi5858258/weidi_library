@@ -21,7 +21,7 @@ public class MLog {
      * }
      */
     private volatile static boolean mSwitch = true;
-    private volatile static String TAG = "com.weidi.artifact";
+    private volatile static String TAG = "com.weidi.usefragments";
     private static final String TAG_FLAG = "---------->";
     private static BufferedWriter mBufferedWriter;
 
