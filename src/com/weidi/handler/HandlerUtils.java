@@ -14,23 +14,25 @@ import java.util.Iterator;
 /***
  使用:
  一.不需要传递参数
- Message msg = HandlerUtils.getMessage();
+ 方式一:
+ Message msg = HandlerUtils2.getMessage();
  msg.what = 1;
  // 传递注册时的对象
  // 这一步需要注意,不要忘记了
- msg.obj = MainActivity.this;
- HandlerUtils.sendMessageDelayed(msg, 5000);
+ msg.obj = MainActivity.class;
+ HandlerUtils2.sendMessageDelayed(msg, 5000);
+ 方式二:
+ HandlerUtils2.sendEmptyMessage(MainActivity.this, 1);
 
- HandlerUtils.sendEmptyMessageSync(MainActivity.this, 1);
  二.需要传递参数
- Message msg = HandlerUtils.getMessage();
+ Message msg = HandlerUtils2.getMessage();
  msg.what = 1;
  // 这一步需要注意,不要忘记了
- msg.obj = MainActivity.this;
+ msg.obj = MainActivity.class;
  People people = new People();
  Student student = new Student();
- HandlerUtils.setMessage(msg, new Object[]{student, people});
- HandlerUtils.sendMessageDelayed(msg, 5000);
+ HandlerUtils2.setMessage(msg, new Object[]{student, people});
+ HandlerUtils2.sendMessageDelayed(msg, 5000);
 
  注意:
  首先使用这个工具的目的是为了在子线程中执行任务时
@@ -65,20 +67,20 @@ public class HandlerUtils {
      * 一般使用在Activity、Fragment、Service中
      * 在其他类（没有生命周期的类）中使用时，
      * 使用完这个类，需要主动调用一下unregister()方法
-     * @param object
+     * @param clazz
      * @param callback
      */
-    public static void register(Object object, HandlerUtils.Callback callback) {
-        InnerHandler.getInstance().addCallback(object, callback);
+    public static void register(Class clazz, HandlerUtils.Callback callback) {
+        InnerHandler.getInstance().addCallback(clazz, callback);
     }
 
     /***
      * 在Activity、Fragment、Service中的onDestroy()方法中调用，
      * 传递this就行了
-     * @param object
+     * @param clazz
      */
-    public static void unregister(Object object) {
-        InnerHandler.getInstance().exit(object);
+    public static void unregister(Class clazz) {
+        InnerHandler.getInstance().exit(clazz);
     }
 
     public static boolean hasMessages(int what) {
@@ -93,15 +95,15 @@ public class HandlerUtils {
         return InnerHandler.getInstance().getMsg();
     }
 
-    public static Message getMessage(int what) {
-        return InnerHandler.getInstance().getMsg(what);
+    public static Message getMessage(Class clazz, int what) {
+        return InnerHandler.getInstance().getMsg(clazz, what);
     }
 
     /***
      * @param msg
      */
-    public static boolean sendMessageSync(Message msg) {
-        return InnerHandler.getInstance().sendMsgSync(msg);
+    public static boolean sendMessage(Message msg) {
+        return InnerHandler.getInstance().sendMsg(msg);
     }
 
     /***
@@ -109,15 +111,7 @@ public class HandlerUtils {
      * @param msg
      * @param objArray
      */
-    public static boolean sendMessageSync(Message msg, Object[] objArray) {
-        return InnerHandler.getInstance().sendMsgSync(msg, objArray);
-    }
-
-    public static boolean sendMessageAsync(Message msg) {
-        return InnerHandler.getInstance().sendMsg(msg);
-    }
-
-    public static boolean sendMessageAsync(Message msg, Object[] objArray) {
+    public static boolean sendMessage(Message msg, Object[] objArray) {
         return InnerHandler.getInstance().sendMsg(msg, objArray);
     }
 
@@ -142,45 +136,45 @@ public class HandlerUtils {
      * @return
      */
     public static boolean sendMessageAtTime(Message msg, long uptimeMillis) {
-        return InnerHandler.getInstance().sendMsgAtTime(msg, uptimeMillis, true);
+        return InnerHandler.getInstance().sendMsgAtTime(msg, uptimeMillis, false);
     }
 
     public static boolean sendMessageAtTime(Message msg, long uptimeMillis, Object[] objArray) {
-        return InnerHandler.getInstance().sendMsgAtTime(msg, uptimeMillis, true, objArray);
+        return InnerHandler.getInstance().sendMsgAtTime(msg, uptimeMillis, false, objArray);
     }
 
-    public static boolean sendEmptyMessageSync(Object object, int what) {
-        return InnerHandler.getInstance().sendEmptyMsgSync(object, what);
+    /*public static boolean sendEmptyMessage(Class clazz, int what) {
+        return InnerHandler.getInstance().sendEmptyMsg(clazz, what);
     }
 
-    public static boolean sendEmptyMessageSync(Object object, int what, Object[] objArray) {
-        return InnerHandler.getInstance().sendEmptyMsgSync(object, what, objArray);
+    public static boolean sendEmptyMessage(Class clazz, int what, Object[] objArray) {
+        return InnerHandler.getInstance().sendEmptyMsg(clazz, what, objArray);
+    }*/
+
+    public static boolean sendEmptyMessage(Class clazz, int what) {
+        return InnerHandler.getInstance().sendEmptyMsg(clazz, what);
     }
 
-    public static boolean sendEmptyMessageAsync(Object object, int what) {
-        return InnerHandler.getInstance().sendEmptyMsgAsync(object, what);
+    public static boolean sendEmptyMessage(Class clazz, int what, Object[] objArray) {
+        return InnerHandler.getInstance().sendEmptyMsg(clazz, what, objArray);
     }
 
-    public static boolean sendEmptyMessageAsync(Object object, int what, Object[] objArray) {
-        return InnerHandler.getInstance().sendEmptyMsgAsync(object, what, objArray);
+    public static boolean sendEmptyMessageDelayed(Class clazz, int what, long delayMillis) {
+        return InnerHandler.getInstance().sendEmptyMsgDelayed(clazz, what, delayMillis);
     }
 
-    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis) {
-        return InnerHandler.getInstance().sendEmptyMsgDelayed(object, what, delayMillis);
-    }
-
-    public static boolean sendEmptyMessageDelayed(Object object, int what, long delayMillis,
+    public static boolean sendEmptyMessageDelayed(Class clazz, int what, long delayMillis,
                                                   Object[] objArray) {
-        return InnerHandler.getInstance().sendEmptyMsgDelayed(object, what, delayMillis, objArray);
+        return InnerHandler.getInstance().sendEmptyMsgDelayed(clazz, what, delayMillis, objArray);
     }
 
-    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis) {
-        return InnerHandler.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis);
+    public static boolean sendEmptyMessageAtTime(Class clazz, int what, long uptimeMillis) {
+        return InnerHandler.getInstance().sendEmptyMsgAtTime(clazz, what, uptimeMillis);
     }
 
-    public static boolean sendEmptyMessageAtTime(Object object, int what, long uptimeMillis,
+    public static boolean sendEmptyMessageAtTime(Class clazz, int what, long uptimeMillis,
                                                  Object[] objArray) {
-        return InnerHandler.getInstance().sendEmptyMsgAtTime(object, what, uptimeMillis, objArray);
+        return InnerHandler.getInstance().sendEmptyMsgAtTime(clazz, what, uptimeMillis, objArray);
     }
 
     public static boolean sendMessageAtFrontOfQueue(Message msg) {
@@ -219,14 +213,14 @@ class InnerHandler extends Handler {
 
     private static final String TAG = "InnerHandler";
     private static final boolean printLog = false;
-    private volatile static InnerHandler sInnerHandler;
-    private static Looper mLooper;
     private static final HashMap<Message, Object[]> mMsgMap =
             new HashMap<Message, Object[]>();
-    private static HashMap<Object, HandlerUtils.Callback> mHashMap =
-            new HashMap<Object, HandlerUtils.Callback>();
+    private static HashMap<Class, HandlerUtils.Callback> mCallbackMap =
+            new HashMap<Class, HandlerUtils.Callback>();
     private static ArrayList<Message> mMsgsList = new ArrayList<Message>();
-    private static Message sMessage;
+    private volatile static InnerHandler sInnerHandler = null;
+    private static Looper mLooper = null;
+    private static Message sMessage = null;
 
     private InnerHandler(Looper looper) {
         super(looper);
@@ -237,12 +231,17 @@ class InnerHandler extends Handler {
 
     static void setLooper(Looper looper) {
         mLooper = looper;
+        sInnerHandler = null;
     }
 
     static InnerHandler getInstance() {
         if (sInnerHandler == null) {
             synchronized (InnerHandler.class) {
                 if (sInnerHandler == null) {
+                    mMsgMap.clear();
+                    mCallbackMap.clear();
+                    mMsgsList.clear();
+                    sMessage = null;
                     sInnerHandler = new InnerHandler(mLooper);
                 }
             }
@@ -250,17 +249,17 @@ class InnerHandler extends Handler {
         return sInnerHandler;
     }
 
-    final void addCallback(Object object, HandlerUtils.Callback callback) {
-        if (object == null || callback == null) {
+    final void addCallback(Class clazz, HandlerUtils.Callback callback) {
+        if (clazz == null || callback == null) {
             return;
         }
         synchronized (InnerHandler.this) {
-            if (!mHashMap.containsKey(object)) {
-                if (printLog)
-                    Log.i(TAG, "addCallback():object = " + object);
-                mHashMap.put(object, callback);
-                if (printLog)
-                    Log.i(TAG, "add mHashMap.size() = " + mHashMap.size());
+            if (!mCallbackMap.containsKey(clazz)) {
+                mCallbackMap.put(clazz, callback);
+                if (printLog) {
+                    Log.i(TAG, "addCallback():clazz = " + clazz);
+                    Log.i(TAG, "add mCallbackMap.size() = " + mCallbackMap.size());
+                }
             }
         }
     }
@@ -270,17 +269,6 @@ class InnerHandler extends Handler {
     }
 
     final Message getMsg() {
-        /*Message msg = null;
-        if (sMessage == null) {
-            msg = this.obtainMessage();
-            sMessage = msg;
-        } else {
-            msg = Message.obtain(sMessage);
-        }*/
-        return getMsg(Integer.MIN_VALUE);
-    }
-
-    final Message getMsg(int what) {
         Message msg = null;
         if (sMessage == null) {
             msg = this.obtainMessage();
@@ -288,83 +276,45 @@ class InnerHandler extends Handler {
         } else {
             msg = Message.obtain(sMessage);
         }
+        return msg;
+    }
+
+    final Message getMsg(Class clazz, int what) {
+        Message msg = getMsg();
         if (msg != null) {
+            msg.obj = clazz;
             msg.what = what;
         }
         return msg;
     }
 
-    final boolean sendMsgSync(Message msg) {
-        // Log.i(TAG, "sendMsgSync()msg: " + msg);
-        boolean sendMsg = sendMsg(msg);
-        synchronized (msg) {
-            try {
-                if (msg.obj != null) {
-                    // Log.i(TAG, "msg.wait(): " + msg);
-                    msg.wait();
-                }
-            } catch (Exception e) {
-            }
-        }
-        return sendMsg;
-    }
-
-    final boolean sendMsgSync(Message msg, Object[] objArray) {
-        // Log.i(TAG, "sendMsgSync()msg: " + msg);
-        boolean sendMsg = sendMsg(msg, objArray);
-        synchronized (msg) {
-            try {
-                if (msg.obj != null) {
-                    // Log.i(TAG, "msg.wait(): " + msg);
-                    msg.wait();
-                }
-            } catch (Exception e) {
-            }
-        }
-        return sendMsg;
-    }
-
     final boolean sendMsg(Message msg) {
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), true);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), false);
     }
 
     final boolean sendMsg(Message msg, Object[] objArray) {
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), true, objArray);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), false, objArray);
     }
 
-    final boolean sendEmptyMsgSync(Object object, int what) {
+    final boolean sendEmptyMsg(Class clazz, int what) {
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
-        return sendMsgSync(msg);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), false);
     }
 
-    final boolean sendEmptyMsgSync(Object object, int what, Object[] objArray) {
+    final boolean sendEmptyMsg(Class clazz, int what, Object[] objArray) {
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
-        return sendMsgSync(msg, objArray);
-    }
-
-    final boolean sendEmptyMsgAsync(Object object, int what) {
-        Message msg = getMsg();
-        msg.obj = object;
-        msg.what = what;
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), true);
-    }
-
-    final boolean sendEmptyMsgAsync(Object object, int what, Object[] objArray) {
-        Message msg = getMsg();
-        msg.obj = object;
-        msg.what = what;
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), true, objArray);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis(), false, objArray);
     }
 
     final boolean sendMsgDelayed(Message msg, long delayMillis) {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis() + delayMillis, true);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis() + delayMillis, false);
     }
 
     final boolean sendMsgDelayed(Message msg, long delayMillis, Object[] objArray) {
@@ -372,46 +322,46 @@ class InnerHandler extends Handler {
             delayMillis = 0;
         }
         return sendMsgAtTime(
-                msg, SystemClock.uptimeMillis() + delayMillis, true, objArray);
+                msg, SystemClock.uptimeMillis() + delayMillis, false, objArray);
     }
 
     final boolean sendEmptyMsgDelayed(
-            Object object, int what, long delayMillis) {
+            Class clazz, int what, long delayMillis) {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
-        return sendMsgAtTime(msg, SystemClock.uptimeMillis() + delayMillis, true);
+        return sendMsgAtTime(msg, SystemClock.uptimeMillis() + delayMillis, false);
     }
 
     final boolean sendEmptyMsgDelayed(
-            Object object, int what, long delayMillis, Object[] objArray) {
+            Class clazz, int what, long delayMillis, Object[] objArray) {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
         return sendMsgAtTime(
-                msg, SystemClock.uptimeMillis() + delayMillis, true, objArray);
+                msg, SystemClock.uptimeMillis() + delayMillis, false, objArray);
     }
 
     final boolean sendEmptyMsgAtTime(
-            Object object, int what, long uptimeMillis) {
+            Class clazz, int what, long uptimeMillis) {
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
-        return sendMsgAtTime(msg, uptimeMillis, true);
+        return sendMsgAtTime(msg, uptimeMillis, false);
     }
 
     final boolean sendEmptyMsgAtTime(
-            Object object, int what, long uptimeMillis, Object[] objArray) {
+            Class clazz, int what, long uptimeMillis, Object[] objArray) {
         Message msg = getMsg();
-        msg.obj = object;
+        msg.obj = clazz;
         msg.what = what;
-        return sendMsgAtTime(msg, uptimeMillis, true, objArray);
+        return sendMsgAtTime(msg, uptimeMillis, false, objArray);
     }
 
     /*final boolean postRunnableDelayed(Runnable r, long delayMillis) {
@@ -436,7 +386,7 @@ class InnerHandler extends Handler {
                 }
                 removeMessages(msg.what);
             }
-            mHashMap.clear();
+            mCallbackMap.clear();
             mMsgsList.clear();
         }
     }
@@ -475,7 +425,9 @@ class InnerHandler extends Handler {
                     MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
             }
         }
-        mMsgMap.put(msg, objArray);
+        if (objArray != null) {
+            mMsgMap.put(msg, objArray);
+        }
         return sendMessageAtTime(msg, uptimeMillis);
     }
 
@@ -489,21 +441,25 @@ class InnerHandler extends Handler {
         return sendMessageAtFrontOfQueue(msg);
     }
 
-    final void exit(Object object) {
+    final void exit(Class clazz) {
+        if (clazz == null) {
+            return;
+        }
         synchronized (InnerHandler.this) {
             if (printLog)
-                Log.i(TAG, "exit():object = " + object);
-            if (mHashMap.containsKey(object)) {
-                mHashMap.remove(object);
+                Log.i(TAG, "exit():clazz = " + clazz);
+            if (mCallbackMap.containsKey(clazz)) {
+                mCallbackMap.remove(clazz);
                 if (printLog)
-                    Log.i(TAG, "exit mHashMap.size() = " + mHashMap.size());
+                    Log.i(TAG, "exit mCallbackMap.size() = " + mCallbackMap.size());
             }
             if (printLog)
                 Log.i(TAG, "exit all mMsgsList.size() = " + mMsgsList.size());
             Iterator<Message> iter = mMsgsList.iterator();
             while (iter.hasNext()) {
                 Message msg = iter.next();
-                if (msg.obj == object) {
+                if (clazz.getSimpleName().equals(
+                        ((Class) msg.obj).getSimpleName())) {
                     iter.remove();
                     if (printLog)
                         Log.i(TAG, "exit mMsgsList.size() = " + mMsgsList.size());
@@ -518,12 +474,15 @@ class InnerHandler extends Handler {
      */
     @Override
     public void handleMessage(Message msg) {
-        /*if (printLog)
-            Log.i(TAG, "handleMessage(): " + msg);*/
-        if (msg == null || mHashMap.isEmpty() || msg.obj == null) {
+        if (msg == null
+                || mCallbackMap.isEmpty()
+                || msg.obj == null
+                || !(msg.obj instanceof Class)) {
             return;
         }
-        HandlerUtils.Callback callback = mHashMap.get(msg.obj);
+        if (printLog)
+            Log.i(TAG, "handleMessage(): " + msg);
+        HandlerUtils.Callback callback = mCallbackMap.get((Class) msg.obj);
         if (callback != null) {
             if (mMsgMap.containsKey(msg)) {
                 callback.handleMessage(msg, mMsgMap.get(msg));
@@ -539,11 +498,11 @@ class InnerHandler extends Handler {
             /*if (printLog)
                 Log.i(TAG, "mMsgsList.size() after = " + mMsgsList.size());*/
         }
-        synchronized (msg) {
+        /*synchronized (msg) {
             msg.notify();
-            // Log.i(TAG, "msg.notify(): " + msg);
+            Log.i(TAG, "msg.notify(): " + msg);
             msg.obj = null;
-        }
+        }*/
         // super.handleMessage(msg);
     }
 
