@@ -1,5 +1,7 @@
 package com.weidi.eventbus;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
@@ -120,22 +122,42 @@ public class EventBusUtils {
 
 class EventBus {
 
-    private static final String TAG = "EventBus";
+    private static final String TAG =
+            EventBus.class.getSimpleName();
 
     private volatile static EventBus sEventBus;
+
+    private HandlerThread mHandlerThread;
+    private Handler mThreadHandler;
+    private Handler mUiHandler;
 
     EventBus() {
         clear();
 
-        HandlerUtils.register(this, new HandlerUtils.Callback() {
+        mHandlerThread = new HandlerThread(TAG);
+        mHandlerThread.start();
+        mThreadHandler = new Handler(mHandlerThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                EventBus.this.threadHandleMessage(msg);
+            }
+        };
 
+        mUiHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                EventBus.this.uiHandleMessage(msg);
+            }
+        };
+
+        HandlerUtils.register(EventBus.class, new HandlerUtils.Callback() {
             @Override
             public void handleMessage(Message msg, Object[] objArray) {
                 // Log.i(TAG, "EventBus handleMessage() start");
-
                 if (msg == null) {
                     return;
                 }
+
                 if (objArray != null) {
                     if (objArray.length == 1) {
                         mObjResult = dispatchEvent(
@@ -184,13 +206,13 @@ class EventBus {
 
     private static final HashMap<Message, Object[]> mMsgMap =
             new HashMap<Message, Object[]>();
-    private static final HashMap<Object, Method> mClassMethodHashMap =
+    private static final HashMap<Object, Method> mObjectMethodMap =
             new HashMap<Object, Method>();
     private Object mObjResult;
 
     synchronized void register(Object object) {
         if (object == null) {
-            throw new NullPointerException("EventBus register() : object = null");
+            throw new NullPointerException("EventBus register() object = null");
         }
         Class clazz = object.getClass();
         Method method = null;
@@ -200,32 +222,32 @@ class EventBus {
             method.setAccessible(true);
         } catch (NoSuchMethodException e) {
             method = null;
-            Log.e(TAG, "EventBus register() : " + object + " NoSuchMethodException");
+            Log.e(TAG, "EventBus register(): " + object + " NoSuchMethodException");
             e.printStackTrace();
         } catch (Exception e) {
             method = null;
             e.printStackTrace();
         }
 
-        if (method == null || mClassMethodHashMap == null) {
+        if (method == null || mObjectMethodMap == null) {
             return;
         }
-        mClassMethodHashMap.put(object, method);
+        mObjectMethodMap.put(object, method);
     }
 
     synchronized void unregister(Object object) {
         if (object == null) {
-            throw new NullPointerException("EventBus unregister() : class = null");
+            throw new NullPointerException("EventBus unregister() class = null");
         }
-        if (mClassMethodHashMap == null || mClassMethodHashMap.isEmpty()) {
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
             return;
         }
-        if (!mClassMethodHashMap.containsKey(object)) {
+        if (!mObjectMethodMap.containsKey(object)) {
             return;
         }
-        String sampleName = object.getClass().getSimpleName();
 
-        Iterator<Map.Entry<Object, Method>> iter = mClassMethodHashMap.entrySet().iterator();
+        String sampleName = object.getClass().getSimpleName();
+        Iterator<Map.Entry<Object, Method>> iter = mObjectMethodMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             Object keyObject = entry.getKey();
@@ -241,41 +263,66 @@ class EventBus {
      */
     void onDestroy() {
         Log.i(TAG, "onDestroy()");
-        HandlerUtils.unregister(this);
+        HandlerUtils.unregister(EventBus.class);
     }
 
     /***
-     * 同步,有结果返回
-     * 这里"同步"的意思是A处调用postSync()方法后
-     * 只有等到消息接收处的代码执行完并返回结果了,
-     * 才会再继续执行A处下面的代码
+     * 同步
+     * 代码可能执行于UI线程或者Thread线程
      *
      * @param what 消息标志
      * @param objArray 传递的数据 传给onEvent(int what, Object[] objArray)的参数.
      */
-    Object postSync(
-            final Class clazz,
-            final int what,
-            final Object[] objArray) {
+    Object post(final Class clazz,
+                final int what,
+                final Object[] objArray) {
         if (clazz == null) {
-            throw new NullPointerException("EventBus post() : class = null");
+            throw new NullPointerException("EventBus post() class = null");
         }
-        if (mClassMethodHashMap == null || mClassMethodHashMap.isEmpty()) {
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
             return null;
         }
 
-        // It's not main thread.
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            Message msg = HandlerUtils.getMessage();
-            msg.what = what;
-            msg.obj = EventBus.this;
-            HandlerUtils.sendMessageSync(
-                    msg, new Object[]{clazz, objArray});
-            return mObjResult;
+        return dispatchEvent(clazz, what, objArray);
+    }
+
+    Object post(final Object object,
+                final int what,
+                final Object[] objArray) {
+        if (object == null) {
+            throw new NullPointerException("EventBus post() object = null");
+        }
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+            return null;
         }
 
-        // It's main thread.
-        return dispatchEvent(clazz, what, objArray);
+        return dispatchEvent(object, what, objArray);
+    }
+
+    Object postUi(final Object object,
+                  final int what,
+                  final Object[] objArray) {
+        if (object == null) {
+            throw new NullPointerException("EventBus post() object = null");
+        }
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+            return null;
+        }
+
+        return null;
+    }
+
+    Object postThread(final Object object,
+                      final int what,
+                      final Object[] objArray) {
+        if (object == null) {
+            throw new NullPointerException("EventBus post() object = null");
+        }
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
+            return null;
+        }
+
+        return null;
     }
 
     /***
@@ -313,14 +360,11 @@ class EventBus {
         if (clazz == null) {
             throw new NullPointerException("EventBus post() : class = null");
         }
-        if (mClassMethodHashMap == null || mClassMethodHashMap.isEmpty()) {
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
             return;
         }
-        Message msg = HandlerUtils.getMessage();
-        msg.what = what;
-        msg.obj = EventBus.this;
-        HandlerUtils.sendMessageDelayed(
-                msg, delayMillis, new Object[]{clazz, objArray});
+        HandlerUtils.sendEmptyMessageDelayed(
+                EventBus.class, what, delayMillis, new Object[]{clazz, objArray});
     }
 
     /***
@@ -338,7 +382,7 @@ class EventBus {
         if (clazz == null) {
             throw new NullPointerException("EventBus post() : class = null");
         }
-        if (mClassMethodHashMap == null || mClassMethodHashMap.isEmpty()) {
+        if (mObjectMethodMap == null || mObjectMethodMap.isEmpty()) {
             return;
         }
 
@@ -350,9 +394,9 @@ class EventBus {
     }
 
     void clear() {
-        if (mClassMethodHashMap != null) {
-            synchronized (mClassMethodHashMap) {
-                mClassMethodHashMap.clear();
+        if (mObjectMethodMap != null) {
+            synchronized (mObjectMethodMap) {
+                mObjectMethodMap.clear();
             }
         }
     }
@@ -361,7 +405,7 @@ class EventBus {
         String sampleName = clazz.getSimpleName();
 
         Iterator<Map.Entry<Object, Method>> iter = null;
-        iter = mClassMethodHashMap.entrySet().iterator();
+        iter = mObjectMethodMap.entrySet().iterator();
         if (iter == null) {
             return null;
         }
@@ -372,8 +416,8 @@ class EventBus {
                 Method method = (Method) entry.getValue();
                 try {
                     /***
-                     这里可能还有bug。就是keyObject是Activity或者Fragment时，退出这些组件后
-                     如果再调用下面的代码，就有可能报异常。
+                     这里可能还有bug.就是keyObject是Activity或者Fragment时,
+                     退出这些组件后如果再调用下面的代码,就有可能报异常.
                      */
                     if (method != null) {
                         /*Log.e(TAG, "EventBus dispatchEvent()keyObject: " + keyObject
@@ -397,13 +441,77 @@ class EventBus {
         return null;
     }
 
-    /*private Object onEvent(int what, Object[] objArray) {
-        Object result = null;
-        switch (what){
-
-            default:
+    /***
+     * 如果知道要调用"onEvent"方法的对象,
+     * 那么调用就更加简单.
+     * @param object
+     * @param what
+     * @param objArray
+     * @return
+     */
+    private Object dispatchEvent(Object object, int what, Object[] objArray) {
+        Method method = mObjectMethodMap.get(object);
+        try {
+            /***
+             这里可能还有bug.就是keyObject是Activity或者Fragment时,
+             退出这些组件后如果再调用下面的代码,就有可能报异常.
+             */
+            if (method != null) {
+                return method.invoke(object, what, objArray);
+            }
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "EventBus dispatchEvent() : IllegalAccessException");
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "EventBus dispatchEvent() : InvocationTargetException");
+            e.printStackTrace();
+        } catch (Exception e) {
+            Log.e(TAG, "EventBus dispatchEvent() : Exception");
+            e.printStackTrace();
         }
-        return result;
-    }*/
+
+        return null;
+    }
+
+    private void threadHandleMessage(Message msg) {
+        if (msg == null) {
+            return;
+        }
+    }
+
+    private void uiHandleMessage(Message msg) {
+        if (msg == null) {
+            return;
+        }
+
+        if (objArray != null) {
+            if (objArray.length == 1) {
+                mObjResult = dispatchEvent(
+                        (Class) objArray[0],
+                        msg.what,
+                        null);
+            } else if (objArray.length == 2) {
+                mObjResult = dispatchEvent(
+                        (Class) objArray[0],
+                        msg.what,
+                        (Object[]) objArray[1]);
+            }
+            if (objArray.length == 3) {
+                if (objArray[2] != null) {
+                    ((EventBusUtils.AAsyncResult) objArray[2]).onResult(mObjResult);
+                }
+            }
+        }
+    }
+
+    /***
+     private Object onEvent(int what, Object[] objArray) {
+     Object result = null;
+     switch (what){
+     default:
+     }
+     return result;
+     }
+     */
 
 }

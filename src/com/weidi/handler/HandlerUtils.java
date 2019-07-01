@@ -50,7 +50,7 @@ import java.util.Iterator;
  我要从FragmentA发送消息到FragmentB.
  那么先在FragmentB中调用register方法进行注册.
  然后在FragmentA中调用下面方法进行发送消息,
- 其中的Class参数就是FragmentB.Class
+ 其中的Class参数就是FragmentB.class
  */
 public class HandlerUtils {
 
