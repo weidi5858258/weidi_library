@@ -11,11 +11,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-/**
- * Created by root on 17-12-18.
+/***
+ Created by root on 17-12-18.
+ 使用
+ getMessage()或者getMessage(Class clazz, int what)
+ 得到的Message,不能把要传递的值放在msg.obj中.如果要传值,
+ 就放到Object[]中,然后调用相应的方法进行发送消息.
+ 传递的值会在Callback接口的
+ handleMessage(Message msg, Object[] objArray)
+ 回调回来.
+
+ 所有的Message都是在子线程中执行的,
+ 一个Message执行完了才执行下一个.
  */
 
-public class HandlerThreadUtils {
+public class ThreadHandlerUtils {
 
     public interface Callback {
         void handleMessage(Message msg, Object[] objArray);
@@ -35,7 +45,7 @@ public class HandlerThreadUtils {
      * @param clazz
      * @param callback 不能为null,因为发送消息后总要有个地方处理事件
      */
-    public static void register(Class clazz, HandlerThreadUtils.Callback callback) {
+    public static void register(Class clazz, ThreadHandlerUtils.Callback callback) {
         InnerHandlerThread.getInstance()
                 .addCallback(clazz, callback);
     }
@@ -50,75 +60,6 @@ public class HandlerThreadUtils {
                 .exit(clazz);
     }
 
-    public static boolean hasMessages(int what) {
-        return InnerHandlerThread.getInstance()
-                .hasMessage(what);
-    }
-
-    /***
-     * 想得到一个消息使用这个方法
-     * @return
-     */
-    public static Message getMessage() {
-        return InnerHandlerThread.getInstance()
-                .getMsg();
-    }
-
-    public static Message getMessage(int what, Class clazz) {
-        return InnerHandlerThread.getInstance()
-                .getMsg(what, clazz);
-    }
-
-    /***
-     * @param msg
-     */
-    public static boolean sendMessage(Message msg) {
-        return InnerHandlerThread.getInstance()
-                .sendMsg(msg);
-    }
-
-    /***
-     * 在子线程中需要传递多个参数到主线程去执行
-     * @param msg
-     * @param objArray
-     */
-    public static void sendMessage(Message msg, Object[] objArray) {
-        InnerHandlerThread.getInstance()
-                .sendMsg(msg, objArray);
-    }
-
-    /***
-     *
-     * @param msg
-     * @param delayMillis 一个时间段，不是一个时刻点
-     * @return
-     */
-    public static boolean sendMessageDelayed(Message msg, long delayMillis) {
-        return InnerHandlerThread.getInstance()
-                .sendMsgDelayed(msg, delayMillis);
-    }
-
-    public static boolean sendMessageDelayed(Message msg, long delayMillis, Object[] objArray) {
-        return InnerHandlerThread.getInstance()
-                .sendMsgDelayed(msg, delayMillis, objArray);
-    }
-
-    /***
-     *
-     * @param msg
-     * @param uptimeMillis 某个时刻点，不是一个时间段
-     * @return
-     */
-    public static boolean sendMessageAtTime(Message msg, long uptimeMillis) {
-        return InnerHandlerThread.getInstance()
-                .sendMsgAtTime(msg, uptimeMillis, false);
-    }
-
-    public static boolean sendMessageAtTime(Message msg, long uptimeMillis, Object[] objArray) {
-        return InnerHandlerThread.getInstance()
-                .sendMsgAtTime(msg, uptimeMillis, false, objArray);
-    }
-
     public static boolean sendEmptyMessage(Class clazz, int what) {
         return InnerHandlerThread.getInstance()
                 .sendEmptyMsg(clazz, what);
@@ -129,6 +70,10 @@ public class HandlerThreadUtils {
                 .sendEmptyMsg(clazz, what, objArray);
     }
 
+    /***
+     * @param delayMillis 一个时间段，不是一个时刻点
+     * @return
+     */
     public static boolean sendEmptyMessageDelayed(Class clazz, int what, long delayMillis) {
         return InnerHandlerThread.getInstance()
                 .sendEmptyMsgDelayed(clazz, what, delayMillis);
@@ -140,6 +85,10 @@ public class HandlerThreadUtils {
                 .sendEmptyMsgDelayed(clazz, what, delayMillis, objArray);
     }
 
+    /***
+     * @param uptimeMillis 某个时刻点，不是一个时间段
+     * @return
+     */
     public static boolean sendEmptyMessageAtTime(Class clazz, int what, long uptimeMillis) {
         return InnerHandlerThread.getInstance()
                 .sendEmptyMsgAtTime(clazz, what, uptimeMillis);
@@ -151,9 +100,15 @@ public class HandlerThreadUtils {
                 .sendEmptyMsgAtTime(clazz, what, uptimeMillis, objArray);
     }
 
-    public static boolean sendMessageAtFrontOfQueue(Message msg) {
+    public static boolean sendMessageAtFrontOfQueue(Class clazz, int what) {
         return InnerHandlerThread.getInstance()
-                .sendMsgAtFrontOfQueue(msg);
+                .sendMsgAtFrontOfQueue(
+                        InnerHandlerThread.getInstance().getMsg(clazz, what));
+    }
+
+    public static boolean hasMessages(int what) {
+        return InnerHandlerThread.getInstance()
+                .hasMessage(what);
     }
 
     public static void removeMessages(int what) {
@@ -165,6 +120,58 @@ public class HandlerThreadUtils {
         InnerHandlerThread.getInstance()
                 .removeAllMsgs();
     }
+
+    /***
+     * 等同于sendEmptyMessage(Class clazz, int what)
+     * 因此这些方法都注释掉了,调用相关的Empty方法就行了
+     * @param msg
+     */
+    /*public static boolean sendMessage(Message msg) {
+        return InnerHandlerThread.getInstance()
+                .sendMsg(msg);
+    }*/
+
+    /***
+     * 在子线程中需要传递多个参数到主线程去执行
+     * @param msg
+     * @param objArray
+     */
+    /*public static void sendMessage(Message msg, Object[] objArray) {
+        InnerHandlerThread.getInstance()
+                .sendMsg(msg, objArray);
+    }*/
+
+    /***
+     *
+     * @param msg
+     * @param delayMillis 一个时间段，不是一个时刻点
+     * @return
+     */
+    /*public static boolean sendMessageDelayed(Message msg, long delayMillis) {
+        return InnerHandlerThread.getInstance()
+                .sendMsgDelayed(msg, delayMillis);
+    }*/
+
+    /*public static boolean sendMessageDelayed(Message msg, long delayMillis, Object[] objArray) {
+        return InnerHandlerThread.getInstance()
+                .sendMsgDelayed(msg, delayMillis, objArray);
+    }*/
+
+    /***
+     *
+     * @param msg
+     * @param uptimeMillis 某个时刻点，不是一个时间段
+     * @return
+     */
+    /*public static boolean sendMessageAtTime(Message msg, long uptimeMillis) {
+        return InnerHandlerThread.getInstance()
+                .sendMsgAtTime(msg, uptimeMillis, false);
+    }*/
+
+    /*public static boolean sendMessageAtTime(Message msg, long uptimeMillis, Object[] objArray) {
+        return InnerHandlerThread.getInstance()
+                .sendMsgAtTime(msg, uptimeMillis, false, objArray);
+    }*/
 
 }
 
@@ -179,15 +186,18 @@ public class HandlerThreadUtils {
  */
 final class InnerHandlerThread extends HandlerThread {
 
-    private static final String TAG = "InnerHandlerThread";
+    private static final String TAG =
+            InnerHandlerThread.class.getSimpleName();
     private static final boolean printLog = false;
+
     private static final HashMap<Message, Object[]> mMsgMap =
             new HashMap<Message, Object[]>();
-    private static final HashMap<Class, HandlerThreadUtils.Callback> mCallbackMap =
-            new HashMap<Class, HandlerThreadUtils.Callback>();
-    private static ArrayList<Message> mMsgsList = new ArrayList<Message>();
+    private static final HashMap<Class, ThreadHandlerUtils.Callback> mCallbackMap =
+            new HashMap<Class, ThreadHandlerUtils.Callback>();
+    private static ArrayList<Message> mMsgsList =
+            new ArrayList<Message>();
     private volatile static InnerHandlerThread sInnerHandlerThread = null;
-    private volatile static Handler sInnerHandler = null;
+    private volatile static Handler sInnerThreadHandler = null;
     private volatile static Message sMessage = null;
 
     private InnerHandlerThread(String name) {
@@ -198,7 +208,7 @@ final class InnerHandlerThread extends HandlerThread {
         if (sInnerHandlerThread == null) {
             synchronized (InnerHandlerThread.class) {
                 if (sInnerHandlerThread == null) {
-                    sInnerHandlerThread = new InnerHandlerThread("InnerHandlerThread");
+                    sInnerHandlerThread = new InnerHandlerThread(TAG);
                     sInnerHandlerThread.start();
                 }
             }
@@ -211,10 +221,8 @@ final class InnerHandlerThread extends HandlerThread {
         mMsgMap.clear();
         mCallbackMap.clear();
         mMsgsList.clear();
-        sInnerHandlerThread = null;
-        sInnerHandler = null;
+        sInnerThreadHandler = null;
         sMessage = null;
-        // getInstance().start();
         createHandler();
     }
 
@@ -225,10 +233,21 @@ final class InnerHandlerThread extends HandlerThread {
      */
     final Handler getHandler() {
         createHandler();
-        return sInnerHandler;
+        return sInnerThreadHandler;
     }
 
-    final void addCallback(Class clazz, HandlerThreadUtils.Callback callback) {
+    final void createHandler() {
+        if (sInnerThreadHandler == null) {
+            sInnerThreadHandler = new Handler(getInstance().getLooper()) {
+                @Override
+                public void handleMessage(Message msg) {
+                    InnerHandlerThread.this.handleMessage(msg);
+                }
+            };
+        }
+    }
+
+    final void addCallback(Class clazz, ThreadHandlerUtils.Callback callback) {
         if (clazz == null || callback == null) {
             return;
         }
@@ -236,18 +255,15 @@ final class InnerHandlerThread extends HandlerThread {
             if (!mCallbackMap.containsKey(clazz)) {
                 mCallbackMap.put(clazz, callback);
                 if (printLog) {
-                    Log.i(TAG, "addCallback() object: " + clazz);
-                    Log.i(TAG, "addCallback() mCallbackMap.size(): " + mCallbackMap.size());
+                    Log.i(TAG, "addCallback() object: " + clazz +
+                            " mCallbackMap.size(): " + mCallbackMap.size());
                 }
             }
         }
     }
 
-    final boolean hasMessage(int what) {
-        return getHandler().hasMessages(what);
-    }
 
-    final Message getMsg() {
+    private final Message getMsg() {
         Message msg = null;
         if (sMessage == null) {
             msg = getHandler().obtainMessage();
@@ -258,63 +274,47 @@ final class InnerHandlerThread extends HandlerThread {
         return msg;
     }
 
-    final Message getMsg(int what, Class clazz) {
+    final Message getMsg(Class clazz, int what) {
         Message msg = getMsg();
-        if (msg != null) {
-            msg.what = what;
-            msg.obj = clazz;
-        }
+        msg.obj = clazz;
+        msg.what = what;
         return msg;
     }
 
     final boolean sendMsg(Message msg) {
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis(),
-                false);
+        return sendMsgAtTime(
+                msg, SystemClock.uptimeMillis(), false);
     }
 
     final boolean sendMsg(Message msg, Object[] objArray) {
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis(),
-                false, objArray);
-    }
-
-    final boolean sendEmptyMsg(Class clazz, int what) {
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis(),
-                false);
-    }
-
-    final boolean sendEmptyMsg(Class clazz, int what, Object[] objArray) {
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis(),
-                false,
-                objArray);
+        return sendMsgAtTime(
+                msg, SystemClock.uptimeMillis(), false, objArray);
     }
 
     final boolean sendMsgDelayed(Message msg, long delayMillis) {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis() + delayMillis,
-                true);
+        return sendMsgAtTime(
+                msg, SystemClock.uptimeMillis() + delayMillis, true);
     }
 
     final boolean sendMsgDelayed(Message msg, long delayMillis, Object[] objArray) {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis() + delayMillis,
-                false,
-                objArray);
+        return sendMsgAtTime(
+                msg, SystemClock.uptimeMillis() + delayMillis, false, objArray);
+    }
+
+    final boolean sendEmptyMsg(Class clazz, int what) {
+        return sendMsgAtTime(
+                getMsg(clazz, what), SystemClock.uptimeMillis(), false);
+    }
+
+    final boolean sendEmptyMsg(Class clazz, int what, Object[] objArray) {
+        return sendMsgAtTime(
+                getMsg(clazz, what), SystemClock.uptimeMillis(), false, objArray);
     }
 
     final boolean sendEmptyMsgDelayed(
@@ -322,12 +322,8 @@ final class InnerHandlerThread extends HandlerThread {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis() + delayMillis,
-                true);
+        return sendMsgAtTime(
+                getMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, true);
     }
 
     final boolean sendEmptyMsgDelayed(
@@ -335,34 +331,62 @@ final class InnerHandlerThread extends HandlerThread {
         if (delayMillis < 0) {
             delayMillis = 0;
         }
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                SystemClock.uptimeMillis() + delayMillis,
-                true,
-                objArray);
+        return sendMsgAtTime(
+                getMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, true, objArray);
     }
 
     final boolean sendEmptyMsgAtTime(
             Class clazz, int what, long uptimeMillis) {
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                uptimeMillis,
-                true);
+        return sendMsgAtTime(
+                getMsg(clazz, what), uptimeMillis, true);
     }
 
     final boolean sendEmptyMsgAtTime(
             Class clazz, int what, long uptimeMillis, Object[] objArray) {
-        Message msg = getMsg();
-        msg.obj = clazz;
-        msg.what = what;
-        return sendMsgAtTime(msg,
-                uptimeMillis,
-                true,
-                objArray);
+        return sendMsgAtTime(
+                getMsg(clazz, what), uptimeMillis, true, objArray);
+    }
+
+    ////////////////////////////最终调用的是下面两个方法////////////////////////////
+
+    final boolean sendMsgAtTime(
+            Message msg,
+            long uptimeMillis,
+            boolean needToAddList) {
+        if (needToAddList) {
+            synchronized (InnerHandlerThread.this) {
+                mMsgsList.add(msg);
+                /*if (printLog)
+                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
+                if (printLog)
+                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
+            }
+        }
+        return getHandler().sendMessageAtTime(msg, uptimeMillis);
+    }
+
+    final boolean sendMsgAtTime(
+            Message msg,
+            long uptimeMillis,
+            boolean needToAddList,
+            Object[] objArray) {
+        if (needToAddList) {
+            synchronized (InnerHandlerThread.this) {
+                mMsgsList.add(msg);
+                /*if (printLog)
+                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
+                if (printLog)
+                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
+            }
+        }
+        mMsgMap.put(msg, objArray);
+        return getHandler().sendMessageAtTime(msg, uptimeMillis);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    final boolean hasMessage(int what) {
+        return getHandler().hasMessages(what);
     }
 
     final void removeMessage(int what) {
@@ -377,43 +401,9 @@ final class InnerHandlerThread extends HandlerThread {
                 }
                 getHandler().removeMessages(msg.what);
             }
-            mCallbackMap.clear();
+            mMsgMap.clear();
             mMsgsList.clear();
         }
-    }
-
-    final boolean sendMsgAtTime(
-            Message msg,
-            long uptimeMillis,
-            boolean needAddToList) {
-        if (needAddToList) {
-            synchronized (InnerHandlerThread.this) {
-                mMsgsList.add(msg);
-                /*if (printLog)
-                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
-                if (printLog)
-                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
-            }
-        }
-        return getHandler().sendMessageAtTime(msg, uptimeMillis);
-    }
-
-    final boolean sendMsgAtTime(
-            Message msg,
-            long uptimeMillis,
-            boolean needAddToList,
-            Object[] objArray) {
-        if (needAddToList) {
-            synchronized (InnerHandlerThread.this) {
-                mMsgsList.add(msg);
-                /*if (printLog)
-                    MLog.i(TAG, "sendMsgAtTime " + msg.toString());
-                if (printLog)
-                    MLog.i(TAG, "sendMsgAtTime mMsgsList.size() = " + mMsgsList.size());*/
-            }
-        }
-        mMsgMap.put(msg, objArray);
-        return getHandler().sendMessageAtTime(msg, uptimeMillis);
     }
 
     final boolean sendMsgAtFrontOfQueue(Message msg) {
@@ -449,40 +439,31 @@ final class InnerHandlerThread extends HandlerThread {
         }
     }
 
-    private void createHandler() {
-        if (sInnerHandler == null) {
-            sInnerHandler = new Handler(getInstance().getLooper()) {
+    private void handleMessage(Message msg) {
+        if (msg == null
+                || msg.obj == null
+                || !(msg.obj instanceof Class)
+                || mCallbackMap.isEmpty()) {
+            if (printLog)
+                Log.e(TAG, "handleMessage() return");
+            return;
+        }
 
-                @Override
-                public void handleMessage(Message msg) {
-                    if (msg == null
-                            || mCallbackMap.isEmpty()
-                            || msg.obj == null
-                            || !(msg.obj instanceof Class)) {
-                        if (printLog)
-                            Log.e(TAG, "createHandler() handleMessage() return");
-                        return;
-                    }
-
-                    if (printLog)
-                        Log.i(TAG, "createHandler() handleMessage(): " + msg);
-                    HandlerThreadUtils.Callback callback = mCallbackMap.get((Class) msg.obj);
-                    if (callback != null) {
-                        if (mMsgMap.containsKey(msg)) {
-                            callback.handleMessage(msg, mMsgMap.get(msg));
-                        } else {
-                            callback.handleMessage(msg, null);
-                        }
-                    }
-                    if (mMsgMap.containsKey(msg)) {
-                        mMsgMap.remove(msg);
-                    }
-                    if (mMsgsList.contains(msg)) {
-                        mMsgsList.remove(msg);
-                    }
-                    // super.handleMessage(msg);
-                }
-            };
+        if (printLog)
+            Log.i(TAG, "handleMessage() " + msg);
+        ThreadHandlerUtils.Callback callback = mCallbackMap.get((Class) msg.obj);
+        if (callback != null) {
+            if (mMsgMap.containsKey(msg)) {
+                callback.handleMessage(msg, mMsgMap.get(msg));
+            } else {
+                callback.handleMessage(msg, null);
+            }
+        }
+        if (mMsgMap.containsKey(msg)) {
+            mMsgMap.remove(msg);
+        }
+        if (mMsgsList.contains(msg)) {
+            mMsgsList.remove(msg);
         }
     }
 
