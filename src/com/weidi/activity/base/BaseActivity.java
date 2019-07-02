@@ -158,7 +158,7 @@ public abstract class BaseActivity
         for (String key : sFragmentBackTypeSMap.keySet()) {
             if (key.equals(fragmentName)) {
                 int type = sFragmentBackTypeSMap.get(key);
-                EventBusUtils.postAsync(
+                EventBusUtils.post(
                         FragOperManager.class,
                         type,
                         new Object[]{this, mBaseFragment});
