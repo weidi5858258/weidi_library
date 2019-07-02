@@ -192,37 +192,6 @@ class EventBus {
                 EventBus.this.uiHandleMessage(msg);
             }
         };
-
-        HandlerUtils.register(EventBus.class, new HandlerUtils.Callback() {
-            @Override
-            public void handleMessage(Message msg, Object[] objArray) {
-                // Log.i(TAG, "EventBus handleMessage() start");
-                if (msg == null) {
-                    return;
-                }
-
-                if (objArray != null) {
-                    if (objArray.length == 1) {
-                        mObjResult = dispatchEvent(
-                                (Class) objArray[0],
-                                msg.what,
-                                null);
-                    } else if (objArray.length == 2) {
-                        mObjResult = dispatchEvent(
-                                (Class) objArray[0],
-                                msg.what,
-                                (Object[]) objArray[1]);
-                    }
-                    if (objArray.length == 3) {
-                        if (objArray[2] != null) {
-                            ((EventBusUtils.AAsyncResult) objArray[2]).onResult(mObjResult);
-                        }
-                    }
-                }
-
-                // Log.i(TAG, "EventBus handleMessage() end");
-            }
-        });
     }
 
     static EventBus getDefault() {
