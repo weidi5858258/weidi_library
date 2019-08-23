@@ -322,7 +322,7 @@ public class BaseDaoImpl3 extends ABaseDao {
             //            Iterator iterator=map.entrySet().iterator();
             //            while(iterator.hasNext()){
             //                Map.Entry<String, String> entry= (Entry<String, String>) iterator
-            // .next();
+            // .nextHandle();
             //                System.out.println("key:"+entry.getKey()+" value"+entry.getValue());
             //            }
 

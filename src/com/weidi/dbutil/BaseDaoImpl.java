@@ -728,7 +728,7 @@ public class BaseDaoImpl extends ABaseDao {
             }
             /*Iterator iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = (Entry<String, String>) iterator.next();
+                Map.Entry<String, String> entry = (Entry<String, String>) iterator.nextHandle();
                 System.out.println("key:" + entry.getKey() + " value" + entry.getValue());
             }
             getWritableDb().delete(tableName, "number=? and flag=?", new String[]{"12345", "5"});*/

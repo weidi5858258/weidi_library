@@ -33,8 +33,10 @@
     <item name="gridview" type="id"/>
     <item name="webview" type="id"/>
 
-    <item name="about_version_code" type="id">false</item>
-    <item name="split" type="id">false</item>
+    <!--<item name="about_version_code" type="id">false</item>-->
+    <!--<item name="split" type="id">false</item>-->
+    <item name="about_version_code" type="id"/>
+    <item name="split" type="id"/>
 
     <item name="fab_expand_menu_button" type="id"/>
     <item name="fab_label" type="id"/>

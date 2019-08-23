@@ -137,7 +137,7 @@ public class WheelScroller {
     }
 
     /**
-     * Set next message to queue. Clears queue before.
+     * Set nextHandle message to queue. Clears queue before.
      *
      * @param message the message to set
      */

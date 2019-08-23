@@ -34,7 +34,7 @@ public class WheelRecycle {
                     firstItem++;
                 }
             } else {
-                i++; // go to next item
+                i++; // go to nextHandle item
             }
             index++;
         }
