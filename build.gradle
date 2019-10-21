@@ -7,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.5.1'
     }
 }
 
@@ -57,7 +57,6 @@ android {
             assets.srcDirs = assetsFolder
             aidl.srcDirs = aidlFolder
             jni.srcDirs = jniFolder
-
         }// main
 
         debug.setRoot('build-types/debug')
@@ -72,6 +71,9 @@ android {
         }
     }
     productFlavors {
+    }
+    lintOptions {
+        abortOnError false
     }
 }// android
 
@@ -90,11 +92,6 @@ dependencies {
     compile 'com.android.support:cardview-v7:28.0.0'
     compile 'com.android.support:recyclerview-v7:28.0.0'
     compile 'com.android.support.constraint:constraint-layout:1.1.3'
-}
+}// dependencies
 
-android {
-    lintOptions {
-        abortOnError false
-    }
-}
 
