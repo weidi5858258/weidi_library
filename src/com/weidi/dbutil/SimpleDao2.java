@@ -6,8 +6,10 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.Map;
 
-/**
- * Created by root on 17-1-4.
+/***
+ Created by root on 17-1-4.
+
+ 使用时的操作类
  */
 
 public final class SimpleDao2 extends BaseDaoImpl2 {

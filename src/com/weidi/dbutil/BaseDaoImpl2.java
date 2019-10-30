@@ -3,7 +3,6 @@ package com.weidi.dbutil;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -16,6 +15,12 @@ import java.util.Set;
 /***
  Created by root on 16-7-31.
 
+ 这个类与BaseDaoImpl的不同之处就是操作增删改查之前
+ 需要先调用setClass(Class cls)方法,目的是操作哪个表.
+ 对同一张表进行多次操作或者不断重复操作,那么使用这个类比较好.
+
+ 增删改查时都是调用的java方法,因此效率上可能会差一些.
+
  select * from TestBean limit 4 offset 5;
  从第6条数据开始，查询4条信息
  select * from TestBean limit 4,5;
@@ -25,43 +30,39 @@ import java.util.Set;
  select * from TestBean order by 字段 (desc降序或asc升序)
  按什么字段进行降序或者升序排列
 
-
- 创建表:            create  table 表名(元素名 类型,…);
- 删除表:            drop  table 表名;
- 插入数据:       insert  into 表名 values(, , ,) ;
- 创建索引:       create [unique] index 索引名on 表名(col….);
- 删除索引：   drop index 索引名(索引是不可更改的，想更改必须删除重新建)
- 删除数据:       delete from 表名;
- 更新数据:       update 表名 set 字段=’修改后的内容’ where 条件;
+ 创建表:     create  table 表名(元素名 类型,…);
+ 删除表:     drop  table 表名;
+ 插入数据:   insert  into 表名 values(, , ,) ;
+ 创建索引:   create [unique] index 索引名on 表名(col….);
+ 删除索引：  drop index 索引名(索引是不可更改的，想更改必须删除重新建)
+ 删除数据:   delete from 表名;
+ 更新数据:   update 表名 set 字段=’修改后的内容’ where 条件;
  增加一个列:  Alter table 表名 add column 字段 数据类型;
- 选择查询:       select 字段(以”,”隔开) from 表名 where 条件;
- 日期和时间: Select datetime('now')
- 日期:   select date('now');
- 时间:  select time('now');
- 总数：select count(*) from table1;
- 求和：select sum(field1) from table1;
- 平均：select avg(field1) from table1;
- 最大：select max(field1) from table1;
- 最小：select min(field1) from table1;
- 排序：select 字段 from table1 order by 字段(desc或asc)  ;(降序或升序)
- 分组：select 字段 from table1 group by 字段,字段…  ;
- 限制输出:select 字段fromtable1 limit x offset y;
+ 选择查询:   select 字段(以”,”隔开) from 表名 where 条件;
+ 日期和时间: select datetime('now')
+ 日期:      select date('now');
+ 时间:      select time('now');
+ 总数：     select count(*) from table1;
+ 求和：     select sum(field1) from table1;
+ 平均：     select avg(field1) from table1;
+ 最大：     select max(field1) from table1;
+ 最小：     select min(field1) from table1;
+ 排序：     select 字段 from table1 order by 字段(desc或asc)  ;(降序或升序)
+ 分组：     select 字段 from table1 group by 字段,字段…  ;
+ 限制输出:  select 字段fromtable1 limit x offset y;
  = select 字段 from table1 limit y , x;
  */
-public class BaseDaoImpl2 { //extends ABaseDao {
+class BaseDaoImpl2 { //extends ABaseDao {
 
     private static final String TAG = "BaseDaoImpl2";
     private static final String INITIALIZING = "数据库正在初始化...";
     private static final String INITIALIZATION_FAILED = "数据库正在初始化失败,建议清除应用数据";
     private MySQLiteOpenHelper helper;
-    private SQLiteDatabase db_write;
-    private SQLiteDatabase db_read;
     private Context mContext;
-    private String tableName;// 表名
-    private Class mClass;//
-    private Field[] mFields;// 表的字段
-    private HashMap<String, Long> mTableNameAndIdMap =
-            new HashMap<String, Long>();
+    private Class mClass;// 类的Class对象
+    private String tableName;// 表名(也就是类名)
+    private Field[] mFields;// 表的字段(也就是类的属性名)
+    private HashMap<String, Long> mTableNameAndIdMap = new HashMap<String, Long>();
 
     public interface IOperDBResult {
 
@@ -91,7 +92,7 @@ public class BaseDaoImpl2 { //extends ABaseDao {
             throw new NullPointerException("BaseDaoImpl2中Class对象不能为null");
         }
         tableName = mClass.getSimpleName();
-        if (tableName == null) {
+        if (TextUtils.isEmpty(tableName)) {
             throw new NullPointerException("BaseDaoImpl2中tableName为null");
         }
         mFields = mClass.getDeclaredFields();
@@ -117,11 +118,11 @@ public class BaseDaoImpl2 { //extends ABaseDao {
 
     /*************************************主键是_id时的操作*************************************/
 
-    /**
-     * OK
-     *
-     * @param object
-     * @return 新添加的_id号(_id就是主键)
+    /***
+     OK
+
+     @param object
+     @return 新添加的_id号(_id就是主键)
      */
     public synchronized long add(Object object) {
         long index = -1;
@@ -198,14 +199,15 @@ public class BaseDaoImpl2 { //extends ABaseDao {
         } finally {
 
         }
+
         return index;
     }
 
-    /**
-     * OK
-     *
-     * @param values
-     * @return 新添加的_id号(_id就是主键)
+    /***
+     OK
+
+     @param values
+     @return 新添加的_id号(_id就是主键)
      */
 
     public synchronized long add(ContentValues values) {
@@ -602,7 +604,8 @@ public class BaseDaoImpl2 { //extends ABaseDao {
                 return index;
             }*/
 
-            // getHelper().getWritableDb().delete(tableName, "number=? and flag=?", new String[]{"12345", "5"})
+            // getHelper().getWritableDb().delete(tableName, "number=? and flag=?", new
+            // String[]{"12345", "5"})
             // String table, String whereClause, String[] whereArgs
 
             index = getHelper().getWritableDb().delete(
@@ -659,7 +662,8 @@ public class BaseDaoImpl2 { //extends ABaseDao {
                 values[j] = entry.getValue();
             }
 
-            // getHelper().getWritableDb().delete(tableName, "number=? and flag=?", new String[]{"12345", "5"})
+            // getHelper().getWritableDb().delete(tableName, "number=? and flag=?", new
+            // String[]{"12345", "5"})
             index = getHelper().getWritableDb().delete(tableName, sb.toString(), values);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1339,7 +1343,8 @@ public class BaseDaoImpl2 { //extends ABaseDao {
             sql.append(", ");
             sql.append(count);
             sql.append(";");
-            // SELECT * FROM TestBean WHERE name1='aaa' and name5='aaa' and name4='aaa' and name3='aaa' and name2='aaa' LIMIT 50, 100;
+            // SELECT * FROM TestBean WHERE name1='aaa' and name5='aaa' and name4='aaa' and
+            // name3='aaa' and name2='aaa' LIMIT 50, 100;
             Log.i(TAG, sql.toString());
             cursor = getHelper().getReadableDb().rawQuery(
                     sql.toString(),
@@ -1425,7 +1430,6 @@ public class BaseDaoImpl2 { //extends ABaseDao {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            isExists = false;
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -1673,7 +1677,6 @@ public class BaseDaoImpl2 { //extends ABaseDao {
             if (cursor.getCount() > 0) {
                 isExists = true;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1887,7 +1890,7 @@ public class BaseDaoImpl2 { //extends ABaseDao {
         return mList;
     }
 
-    public MySQLiteOpenHelper getHelper() {
+    protected MySQLiteOpenHelper getHelper() {
         if (helper == null) {
             helper = new MySQLiteOpenHelper(mContext);
         }

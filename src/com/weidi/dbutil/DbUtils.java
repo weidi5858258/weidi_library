@@ -14,36 +14,17 @@ import java.util.Map;
 
 
 /***
- 在java bean中必须要有一个_id的整形
- <p>
  Created by root on 16-7-30.
- <p>
- 如何使用:
- <p>
- 一般建议把"_id"设置成主键
- *
- @ClassVersion(version = 0)
- public class Man {
- @Primary <br>
- // 从1开始递增
- private int _id;
- }
- <p>
- // 修改成功后在下个版本中删除掉
- // "name"是之前的属性名称,现在改成"sakura"
- @OriginalField(value = "name")
- private String sakura;
- <p>
  开启线程操作
  DbUtils.getDefault().createOrUpdateDBWithVersion(
  getApplicationContext(),
- new Class[]{Man.class});
+ new Class[]{Test.class});
  */
 
 public class DbUtils {
 
     private static final String VERSION = "Version";
-    private volatile static DbUtils mDbUtils;
+    private volatile static DbUtils sDbUtils;
     private MySQLiteOpenHelper helper;
     private IOperDBOver mIOperDBOver;
 
@@ -74,14 +55,14 @@ public class DbUtils {
     }
 
     public static DbUtils getInstance() {
-        if (mDbUtils == null) {
+        if (sDbUtils == null) {
             synchronized (DbUtils.class) {
-                if (mDbUtils == null) {
-                    mDbUtils = new DbUtils();
+                if (sDbUtils == null) {
+                    sDbUtils = new DbUtils();
                 }
             }
         }
-        return mDbUtils;
+        return sDbUtils;
     }
 
     public MySQLiteOpenHelper getHelper(Context context) {
@@ -103,11 +84,11 @@ public class DbUtils {
         mInitializationState = state;
     }
 
-    /**
-     * 起点
-     * 得到java bean类，然后得到注解的值
-     *
-     * @param context
+    /***
+     起点
+     得到java bean类,然后得到注解的值
+
+     @param context
      */
     public void createOrUpdateDBWithVersion(Context context, Class<?>[] cls) {
         try {
@@ -120,68 +101,68 @@ public class DbUtils {
                 return;
             }
 
-            String path = "/data/data/" + context.getPackageName() + "/databases";
-            File file = new File(path, MySQLiteOpenHelper.DB_NAME);
+            String dbPath = "/data/data/" + context.getPackageName() + "/databases/";
+            File dbFile = new File(dbPath, MySQLiteOpenHelper.DB_NAME);
 
             int clsLength = cls.length;
-            SharedPreferences sp = context.getSharedPreferences(
+            SharedPreferences preferences = context.getSharedPreferences(
                     MySQLiteOpenHelper.SHAREDPREFERENCES,
                     Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sp.edit();
+            SharedPreferences.Editor editor = preferences.edit();
 
-            if (file.exists()) {
+            if (dbFile.exists()) {
                 SQLiteDatabase db_write = getHelper(context).getWritableDb();
                 SQLiteDatabase db_read = getHelper(context).getReadableDb();
 
+                // 对每个表名进行循环查看,是否需要更新表
                 for (int i = 0; i < clsLength; i++) {
                     Class clazz = cls[i];
                     if (clazz == null) {
                         if (mIOperDBOver != null) {
-                            mIOperDBOver.onResult(
-                                    FAIL,
-                                    "Class对象为null");
+                            mIOperDBOver.onResult(FAIL, "Class对象为null");
                         }
                         continue;
                     }
-                    String object = clazz.getSimpleName();
-                    ClassVersion annotation = (ClassVersion) clazz.getAnnotation(
-                            ClassVersion.class);
-                    if (annotation == null) {
+                    String className = clazz.getSimpleName();
+                    ClassVersion classVersion =
+                            (ClassVersion) clazz.getAnnotation(ClassVersion.class);
+                    if (classVersion == null) {
                         if (mIOperDBOver != null) {
                             mIOperDBOver.onResult(
                                     FAIL,
-                                    object + ":这个类没有使用ClassVersion注解");
+                                    className + ":这个类没有使用ClassVersion注解");
                         }
                         return;
                     }
 
-                    String sql = "SELECT COUNT(*) FROM sqlite_master " +
-                            "WHERE type='table' and name ='" + object.trim() + "' ";
-                    Cursor cursor = db_read.rawQuery(sql, null);
                     boolean exists = false;
+                    String sql = "SELECT COUNT(*) FROM sqlite_master " +
+                            "WHERE type='table' and name ='" + className.trim() + "' ";
+                    Cursor cursor = db_read.rawQuery(sql, null);
                     if (cursor != null && cursor.moveToNext()) {
                         int count = cursor.getInt(0);
                         if (count > 0) {
                             exists = true;
                         }
+                        cursor.close();
+                        cursor = null;
                     }
-                    cursor.close();
-                    cursor = null;
 
-                    int version_new = annotation.version();
-                    int version_old = sp.getInt(object + VERSION, 0);
+                    int version_new = classVersion.version();
+                    int version_old = preferences.getInt(className + VERSION, 0);
                     if (exists) {
                         // 表存在时
                         if (version_new != version_old) {
-                            updateDB(context, clazz, db_read, db_write, sp);
-                            saveJavaBeanVersion(editor, object, version_new);
+                            updateDB(context, clazz, db_read, db_write, preferences);
+                            saveJavaBeanVersion(editor, className, version_new);
                         }
                     } else {
                         // 表不存在时
                         createDB(clazz, db_write, editor);
-                        saveJavaBeanVersion(editor, object, version_new);
+                        saveJavaBeanVersion(editor, className, version_new);
                     }
-                }
+                }// for(...) end
+
                 if (mIOperDBOver != null) {
                     mIOperDBOver.onResult(ALLCREATESUCCESS, "");
                     mIOperDBOver.onResult(ALLUPDATESUCCESS, "");
@@ -190,35 +171,33 @@ public class DbUtils {
             }
 
             // 数据库不存在,重新创建数据库
-            helper = new MySQLiteOpenHelper(context);
-            SQLiteDatabase db_write = helper.getWritableDb();
+            SQLiteDatabase db_write = getHelper(context).getWritableDb();
 
             //
             for (int i = 0; i < clsLength; i++) {
                 Class clazz = cls[i];
                 if (clazz == null) {
                     if (mIOperDBOver != null) {
-                        mIOperDBOver.onResult(
-                                FAIL,
-                                "Class对象为null");
+                        mIOperDBOver.onResult(FAIL, "Class对象为null");
                     }
                     continue;
                 }
                 // 表名
-                String object = clazz.getSimpleName();
+                String className = clazz.getSimpleName();
                 ClassVersion annotation = (ClassVersion) clazz.getAnnotation(ClassVersion.class);
                 if (annotation == null) {
                     if (mIOperDBOver != null) {
                         mIOperDBOver.onResult(
                                 FAIL,
-                                object + ":这个类没有使用ClassVersion注解");
+                                className + ":这个类没有使用ClassVersion注解");
                     }
                     continue;
                 }
                 int version_new = annotation.version();
                 createDB(clazz, db_write, editor);
-                saveJavaBeanVersion(editor, object, version_new);
+                saveJavaBeanVersion(editor, className, version_new);
             }
+
             if (mIOperDBOver != null) {
                 mIOperDBOver.onResult(ALLCREATESUCCESS, "数据库及所有的表创建成功");
             }
@@ -234,6 +213,7 @@ public class DbUtils {
             }
         } finally {
             getHelper(context).closeDb();
+            getHelper(context).close();
         }
     }
 
@@ -252,7 +232,7 @@ public class DbUtils {
             SharedPreferences.Editor editor) {
         String table_name = clazz.getSimpleName();
         try {
-            //            db.beginTransaction();
+            // db.beginTransaction();
 
             Field fields[] = clazz.getDeclaredFields();
             if (fields == null || fields.length == 0) {
@@ -382,7 +362,8 @@ public class DbUtils {
             // 创建表
             db.execSQL(sb.toString());
 
-            //            db.setTransactionSuccessful();
+            // db.setTransactionSuccessful();
+
             if (mIOperDBOver != null) {
                 mIOperDBOver.onResult(
                         SINGLECREATESUCCESS,
@@ -396,11 +377,11 @@ public class DbUtils {
             }
             e.printStackTrace();
         } finally {
-            //            db.endTransaction();
+            // db.endTransaction();
         }
     }
 
-    /**
+    /***
      * 不管id是不是主键,都应该要有.
      * 是主键时,增加数据时会自动增1,把这个id值返回;
      * 不是主键时,当增加数据时人为增1,然后把这个id值返回.
@@ -452,15 +433,15 @@ public class DbUtils {
                 return;
             }
 
-            //            db.beginTransaction();
+            // db.beginTransaction();
 
-            /**
-             sqlite> pragma table_info (Man);
+            /***
+             sqlite> pragma table_info (Test);
              0|name|TYPELESSNESS|0||1
              1|_id|TYPELESSNESS|0||0
              sqlite> .mode column
              sqlite> .header on
-             sqlite> pragma table_info (Man);
+             sqlite> pragma table_info (Test);
              cid         name        type          notnull     dflt_value  pk
              ----------  ----------  ------------  ----------  ----------  ----------
              0           name        TYPELESSNESS  0                       1
@@ -469,8 +450,8 @@ public class DbUtils {
             Cursor cursor = db_read.query(table_name, null, null, null, null, null, null);
             if (cursor == null) {
                 // 这种情况要不要把事务处理设置为成功?
-                //                db_write.setTransactionSuccessful();
-                //                db_write.endTransaction();
+                // db_write.setTransactionSuccessful();
+                // db_write.endTransaction();
                 if (mIOperDBOver != null) {
                     mIOperDBOver.onResult(SINGLEUPDATESFAIL, "");
                 }
@@ -604,8 +585,8 @@ public class DbUtils {
                         }
                     }
 
-                    //                    db.setTransactionSuccessful();
-                    //                    db.endTransaction();
+                    // db.setTransactionSuccessful();
+                    // db.endTransaction();
                     if (mIOperDBOver != null) {
                         mIOperDBOver.onResult(SINGLEUPDATESUCCESS, "");
                     }
@@ -613,8 +594,8 @@ public class DbUtils {
                 }
             } else if (matchCount == sonListSize && sonListSize == motherListSize) {
                 if (primaryKey.equals(oldPrimary)) {
-                    //                    db.setTransactionSuccessful();
-                    //                    db.endTransaction();
+                    // db.setTransactionSuccessful();
+                    // db.endTransaction();
                     if (mIOperDBOver != null) {
                         mIOperDBOver.onResult(SINGLEUPDATESUCCESS, "");
                     }
@@ -690,8 +671,8 @@ public class DbUtils {
             if (cursor == null || cursor.getCount() <= 0) {
                 sql = "DROP TABLE " + table_name_temp + ";";
                 db_write.execSQL(sql);
-                //                db_write.setTransactionSuccessful();
-                //                db_write.endTransaction();
+                // db_write.setTransactionSuccessful();
+                // db_write.endTransaction();
                 getHelper(context).closeDb();
                 if (mIOperDBOver != null) {
                     mIOperDBOver.onResult(SINGLEUPDATESUCCESS, "");
@@ -747,7 +728,7 @@ public class DbUtils {
             sql = "DROP TABLE " + table_name_temp + ";";
             db_write.execSQL(sql);
 
-            //            db.setTransactionSuccessful();
+            // db.setTransactionSuccessful();
             if (mIOperDBOver != null) {
                 mIOperDBOver.onResult(SINGLEUPDATESUCCESS, "");
             }
@@ -757,16 +738,16 @@ public class DbUtils {
             }
             e.printStackTrace();
         } finally {
-            //            db.endTransaction();
+            // db.endTransaction();
         }
 
     }
 
     private static void saveJavaBeanVersion(
             SharedPreferences.Editor editor,
-            String clazz,
+            String className,
             int version) {
-        editor.putInt(clazz + VERSION, version);
+        editor.putInt(className + VERSION, version);
         editor.commit();
     }
 
