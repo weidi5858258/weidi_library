@@ -674,6 +674,94 @@ class BaseDaoImpl2 { //extends ABaseDao {
     }
 
     /**
+     * @param object
+     * @param _id    一般是主键
+     * @return
+     */
+    public int update(
+            Object object,
+            int _id) {
+        int index = -1;
+        if (object == null || _id < 0 || mFields == null) {
+            return index;
+        }
+        try {
+            /*if (DbUtils.getInstance().getInitializationState() ==
+                    DbUtils.INITIALIZING) {
+                MyToast.show(INITIALIZING);
+                return index;
+            } else if (DbUtils.getInstance().getInitializationState() ==
+                    DbUtils.INITIALIZATION_FAILED) {
+                MyToast.show(INITIALIZATION_FAILED);
+                return index;
+            }*/
+
+            int length = mFields.length;
+            ContentValues values = new ContentValues();
+            for (int i = 0; i < length; i++) {
+                Field field = mFields[i];
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                String fieldTypeName = field.getType().getSimpleName();
+                if (fieldName.contains("$") || fieldName.contains("serialVersionUID")) {
+                    continue;
+                }
+                if (fieldTypeName.equals(String.class.getSimpleName())) {
+
+                    values.put(fieldName, (String) field.get(object));
+                } else if (fieldTypeName.equals(long.class.getSimpleName()) ||
+                        fieldTypeName.equals(Long.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getLong(object)));
+                } else if (fieldTypeName.equals(short.class.getSimpleName()) ||
+                        fieldTypeName.equals(Short.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getShort(object)));
+                } else if (fieldTypeName.equals(int.class.getSimpleName()) ||
+                        fieldTypeName.equals(Integer.class.getSimpleName())) {
+
+                    if ("_id".equals(fieldName)) {
+                        continue;
+                    }
+                    values.put(fieldName, String.valueOf(field.getInt(object)));
+                } else if (fieldTypeName.equals(double.class.getSimpleName()) ||
+                        fieldTypeName.equals(Double.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getDouble(object)));
+                } else if (fieldTypeName.equals(float.class.getSimpleName()) ||
+                        fieldTypeName.equals(Float.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getFloat(object)));
+                } else if (fieldTypeName.equals(boolean.class.getSimpleName()) ||
+                        fieldTypeName.equals(Boolean.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getBoolean(object)));
+                } else if (fieldTypeName.equals(char.class.getSimpleName()) ||
+                        fieldTypeName.equals(Character.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getChar(object)));
+                } else if (fieldTypeName.equals(byte.class.getSimpleName()) ||
+                        fieldTypeName.equals(Byte.class.getSimpleName())) {
+
+                    values.put(fieldName, String.valueOf(field.getByte(object)));
+                }
+            }
+
+            // update(String table, ContentValues values, String whereClause, String[] whereArgs)
+            index = getHelper().getWritableDb().update(
+                    tableName,
+                    values,
+                    "_id=?",
+                    new String[]{String.valueOf(_id)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+        }
+        return index;
+    }
+
+    /**
      * @param values
      * @param _id    一般是主键
      * @return

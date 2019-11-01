@@ -4,8 +4,11 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
+import com.weidi.dbutil.DbUtils;
 import com.weidi.dbutil.SimpleDao;
+import com.weidi.dbutil.Test;
 import com.weidi.fragment.FragOperManager;
+import com.weidi.handler.ThreadHandlerUtils;
 import com.weidi.log.MLog;
 import com.weidi.eventbus.EventBusUtils;
 import com.weidi.handler.HandlerUtils;
@@ -30,15 +33,11 @@ public class WeidiApplication extends Application {
         super.onCreate();
         MLog.i(TAG, "onCreate()");
 
-        // 数据库
-        SimpleDao.setContext(this);
-        // 先调用一下,把对象给创建好
-        SimpleDao.getInstance();
-
         MyToast.setContext(this);
         MyToast.getInstance();
 
         HandlerUtils.init(Looper.getMainLooper());
+        ThreadHandlerUtils.init();
         EventBusUtils.init();
 
         FragOperManager.getInstance();
