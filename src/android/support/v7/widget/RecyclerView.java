@@ -2121,73 +2121,80 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
     protected void onMeasure(int widthSpec, int heightSpec) {
         if (this.mLayout == null) {
             this.defaultOnMeasure(widthSpec, heightSpec);
-        } else {
-            if (!this.mLayout.isAutoMeasureEnabled()) {
-                if (this.mHasFixedSize) {
-                    this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
-                    return;
-                }
+            return;
+        }
 
-                if (this.mAdapterUpdateDuringMeasure) {
-                    this.startInterceptRequestLayout();
-                    this.onEnterLayoutOrScroll();
-                    this.processAdapterUpdatesAndSetAnimationFlags();
-                    this.onExitLayoutOrScroll();
-                    if (this.mState.mRunPredictiveAnimations) {
-                        this.mState.mInPreLayout = true;
-                    } else {
-                        this.mAdapterHelper.consumeUpdatesInOnePass();
-                        this.mState.mInPreLayout = false;
-                    }
+        // 不支持自动测量
+        if (!this.mLayout.isAutoMeasureEnabled()) {
+            if (this.mHasFixedSize) {
+                this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
+                return;
+            }
 
-                    this.mAdapterUpdateDuringMeasure = false;
-                    this.stopInterceptRequestLayout(false);
-                } else if (this.mState.mRunPredictiveAnimations) {
-                    this.setMeasuredDimension(this.getMeasuredWidth(), this.getMeasuredHeight());
-                    return;
-                }
-
-                if (this.mAdapter != null) {
-                    this.mState.mItemCount = this.mAdapter.getItemCount();
-                } else {
-                    this.mState.mItemCount = 0;
-                }
-
+            if (this.mAdapterUpdateDuringMeasure) {
                 this.startInterceptRequestLayout();
-                this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
+                this.onEnterLayoutOrScroll();
+                this.processAdapterUpdatesAndSetAnimationFlags();
+                this.onExitLayoutOrScroll();
+                if (this.mState.mRunPredictiveAnimations) {
+                    this.mState.mInPreLayout = true;
+                } else {
+                    this.mAdapterHelper.consumeUpdatesInOnePass();
+                    this.mState.mInPreLayout = false;
+                }
+
+                this.mAdapterUpdateDuringMeasure = false;
                 this.stopInterceptRequestLayout(false);
-                this.mState.mInPreLayout = false;
+            } else if (this.mState.mRunPredictiveAnimations) {
+                this.setMeasuredDimension(this.getMeasuredWidth(), this.getMeasuredHeight());
+                return;
+            }
+
+            if (this.mAdapter != null) {
+                this.mState.mItemCount = this.mAdapter.getItemCount();
             } else {
-                int widthMode = MeasureSpec.getMode(widthSpec);
-                int heightMode = MeasureSpec.getMode(heightSpec);
-                this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
-                boolean measureSpecModeIsExactly = widthMode == 1073741824 && heightMode == 1073741824;
-                if (measureSpecModeIsExactly || this.mAdapter == null) {
-                    return;
-                }
+                this.mState.mItemCount = 0;
+            }
 
-                if (this.mState.mLayoutStep == 1) {
-                    this.dispatchLayoutStep1();
-                }
+            this.startInterceptRequestLayout();
+            this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
+            this.stopInterceptRequestLayout(false);
+            this.mState.mInPreLayout = false;
+        } else {
+            int widthMode = MeasureSpec.getMode(widthSpec);
+            int heightMode = MeasureSpec.getMode(heightSpec);
+            this.mLayout.onMeasure(this.mRecycler, this.mState, widthSpec, heightSpec);
+            boolean measureSpecModeIsExactly = widthMode == 1073741824 && heightMode == 1073741824;
+            if (measureSpecModeIsExactly || this.mAdapter == null) {
+                return;
+            }
 
-                this.mLayout.setMeasureSpecs(widthSpec, heightSpec);
+            if (this.mState.mLayoutStep == State.STEP_START) {
+                this.dispatchLayoutStep1();
+            }
+
+            this.mLayout.setMeasureSpecs(widthSpec, heightSpec);
+            this.mState.mIsMeasuring = true;
+            this.dispatchLayoutStep2();
+            this.mLayout.setMeasuredDimensionFromChildren(widthSpec, heightSpec);
+            if (this.mLayout.shouldMeasureTwice()) {
+                this.mLayout.setMeasureSpecs(MeasureSpec.makeMeasureSpec(this.getMeasuredWidth(), 1073741824), MeasureSpec.makeMeasureSpec(this.getMeasuredHeight(), 1073741824));
                 this.mState.mIsMeasuring = true;
                 this.dispatchLayoutStep2();
                 this.mLayout.setMeasuredDimensionFromChildren(widthSpec, heightSpec);
-                if (this.mLayout.shouldMeasureTwice()) {
-                    this.mLayout.setMeasureSpecs(MeasureSpec.makeMeasureSpec(this.getMeasuredWidth(), 1073741824), MeasureSpec.makeMeasureSpec(this.getMeasuredHeight(), 1073741824));
-                    this.mState.mIsMeasuring = true;
-                    this.dispatchLayoutStep2();
-                    this.mLayout.setMeasuredDimensionFromChildren(widthSpec, heightSpec);
-                }
             }
-
         }
     }
 
     void defaultOnMeasure(int widthSpec, int heightSpec) {
-        int width = RecyclerView.LayoutManager.chooseSize(widthSpec, this.getPaddingLeft() + this.getPaddingRight(), ViewCompat.getMinimumWidth(this));
-        int height = RecyclerView.LayoutManager.chooseSize(heightSpec, this.getPaddingTop() + this.getPaddingBottom(), ViewCompat.getMinimumHeight(this));
+        int width = RecyclerView.LayoutManager.chooseSize(
+                widthSpec,
+                this.getPaddingLeft() + this.getPaddingRight(),
+                ViewCompat.getMinimumWidth(this));
+        int height = RecyclerView.LayoutManager.chooseSize(
+                heightSpec,
+                this.getPaddingTop() + this.getPaddingBottom(),
+                ViewCompat.getMinimumHeight(this));
         this.setMeasuredDimension(width, height);
     }
 
@@ -2458,7 +2465,7 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
     }
 
     private void dispatchLayoutStep1() {
-        this.mState.assertLayoutStep(1);
+        this.mState.assertLayoutStep(State.STEP_START);
         this.fillRemainingScrollValues(this.mState);
         this.mState.mIsMeasuring = false;
         this.startInterceptRequestLayout();
@@ -2521,7 +2528,7 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
 
         this.onExitLayoutOrScroll();
         this.stopInterceptRequestLayout(false);
-        this.mState.mLayoutStep = 2;
+        this.mState.mLayoutStep = State.STEP_LAYOUT;
     }
 
     private void dispatchLayoutStep2() {
@@ -2536,13 +2543,13 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
         this.mState.mStructureChanged = false;
         this.mPendingSavedState = null;
         this.mState.mRunSimpleAnimations = this.mState.mRunSimpleAnimations && this.mItemAnimator != null;
-        this.mState.mLayoutStep = 4;
+        this.mState.mLayoutStep = State.STEP_ANIMATIONS;
         this.onExitLayoutOrScroll();
         this.stopInterceptRequestLayout(false);
     }
 
     private void dispatchLayoutStep3() {
-        this.mState.assertLayoutStep(4);
+        this.mState.assertLayoutStep(State.STEP_ANIMATIONS);
         this.startInterceptRequestLayout();
         this.onEnterLayoutOrScroll();
         this.mState.mLayoutStep = 1;
@@ -3725,11 +3732,11 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
         static final int STEP_START = 1;
         static final int STEP_LAYOUT = 2;
         static final int STEP_ANIMATIONS = 4;
+        int mLayoutStep = STEP_START;
         int mTargetPosition = -1;
         private SparseArray<Object> mData;
         int mPreviousLayoutItemCount = 0;
         int mDeletedInvisibleItemCountSincePreviousLayout = 0;
-        int mLayoutStep = 1;
         int mItemCount = 0;
         boolean mStructureChanged = false;
         boolean mInPreLayout = false;
@@ -4688,7 +4695,8 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
     public abstract static class LayoutManager {
         ChildHelper mChildHelper;
         RecyclerView mRecyclerView;
-        private final android.support.v7.widget.ViewBoundsCheck.Callback mHorizontalBoundCheckCallback = new android.support.v7.widget.ViewBoundsCheck.Callback() {
+        private final android.support.v7.widget.ViewBoundsCheck.Callback mHorizontalBoundCheckCallback
+                = new android.support.v7.widget.ViewBoundsCheck.Callback() {
             public int getChildCount() {
                 return LayoutManager.this.getChildCount();
             }
@@ -4719,7 +4727,8 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
                 return LayoutManager.this.getDecoratedRight(view) + params.rightMargin;
             }
         };
-        private final android.support.v7.widget.ViewBoundsCheck.Callback mVerticalBoundCheckCallback = new android.support.v7.widget.ViewBoundsCheck.Callback() {
+        private final android.support.v7.widget.ViewBoundsCheck.Callback mVerticalBoundCheckCallback
+                = new android.support.v7.widget.ViewBoundsCheck.Callback() {
             public int getChildCount() {
                 return LayoutManager.this.getChildCount();
             }
