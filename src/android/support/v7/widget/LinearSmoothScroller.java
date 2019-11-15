@@ -48,7 +48,6 @@ public class LinearSmoothScroller extends SmoothScroller {
         if (time > 0) {
             action.update(-dx, -dy, time, this.mDecelerateInterpolator);
         }
-
     }
 
     protected void onSeekTargetStep(int dx, int dy, State state, Action action) {
@@ -135,20 +134,6 @@ public class LinearSmoothScroller extends SmoothScroller {
         }
     }
 
-    public int calculateDyToMakeVisible(View view, int snapPreference) {
-        LayoutManager layoutManager = this.getLayoutManager();
-        if (layoutManager != null && layoutManager.canScrollVertically()) {
-            LayoutParams params = (LayoutParams)view.getLayoutParams();
-            int top = layoutManager.getDecoratedTop(view) - params.topMargin;
-            int bottom = layoutManager.getDecoratedBottom(view) + params.bottomMargin;
-            int start = layoutManager.getPaddingTop();
-            int end = layoutManager.getHeight() - layoutManager.getPaddingBottom();
-            return this.calculateDtToFit(top, bottom, start, end, snapPreference);
-        } else {
-            return 0;
-        }
-    }
-
     public int calculateDxToMakeVisible(View view, int snapPreference) {
         LayoutManager layoutManager = this.getLayoutManager();
         if (layoutManager != null && layoutManager.canScrollHorizontally()) {
@@ -158,6 +143,20 @@ public class LinearSmoothScroller extends SmoothScroller {
             int start = layoutManager.getPaddingLeft();
             int end = layoutManager.getWidth() - layoutManager.getPaddingRight();
             return this.calculateDtToFit(left, right, start, end, snapPreference);
+        } else {
+            return 0;
+        }
+    }
+
+    public int calculateDyToMakeVisible(View view, int snapPreference) {
+        LayoutManager layoutManager = this.getLayoutManager();
+        if (layoutManager != null && layoutManager.canScrollVertically()) {
+            LayoutParams params = (LayoutParams)view.getLayoutParams();
+            int top = layoutManager.getDecoratedTop(view) - params.topMargin;
+            int bottom = layoutManager.getDecoratedBottom(view) + params.bottomMargin;
+            int start = layoutManager.getPaddingTop();
+            int end = layoutManager.getHeight() - layoutManager.getPaddingBottom();
+            return this.calculateDtToFit(top, bottom, start, end, snapPreference);
         } else {
             return 0;
         }

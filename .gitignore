@@ -1,5 +1,7 @@
 /.git
 .git
+.push_git.sh
+.git_push_impl.sh
 /build
 build
 /weidi_library.iml

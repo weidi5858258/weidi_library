@@ -24,24 +24,10 @@ class ChildHelper {
         this.mHiddenViews = new ArrayList();
     }
 
-    private void hideViewInternal(View child) {
-        this.mHiddenViews.add(child);
-        this.mCallback.onEnteredHiddenState(child);
-    }
-
-    private boolean unhideViewInternal(View child) {
-        if (this.mHiddenViews.remove(child)) {
-            this.mCallback.onLeftHiddenState(child);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     void addView(View child, boolean hidden) {
         this.addView(child, -1, hidden);
     }
-
+    // 根据位置添加view时是否不可见 true表示不可见
     void addView(View child, int index, boolean hidden) {
         int offset;
         if (index < 0) {
@@ -56,29 +42,6 @@ class ChildHelper {
         }
 
         this.mCallback.addView(child, offset);
-    }
-
-    private int getOffset(int index) {
-        if (index < 0) {
-            return -1;
-        } else {
-            int limit = this.mCallback.getChildCount();
-
-            int diff;
-            for(int offset = index; offset < limit; offset += diff) {
-                int removedBefore = this.mBucket.countOnesBefore(offset);
-                diff = index - (offset - removedBefore);
-                if (diff == 0) {
-                    while(this.mBucket.get(offset)) {
-                        ++offset;
-                    }
-
-                    return offset;
-                }
-            }
-
-            return -1;
-        }
     }
 
     void removeView(View view) {
@@ -149,15 +112,15 @@ class ChildHelper {
 
         this.mCallback.attachViewToParent(child, offset, layoutParams);
     }
-
+    // 可见的view的数量
     int getChildCount() {
         return this.mCallback.getChildCount() - this.mHiddenViews.size();
     }
-
+    // 所有view的数量
     int getUnfilteredChildCount() {
         return this.mCallback.getChildCount();
     }
-
+    // 在所有view中得到某个位置上的view
     View getUnfilteredChildAt(int index) {
         return this.mCallback.getChildAt(index);
     }
@@ -176,11 +139,11 @@ class ChildHelper {
             return this.mBucket.get(index) ? -1 : index - this.mBucket.countOnesBefore(index);
         }
     }
-
+    // 判断view是否可见
     boolean isHidden(View view) {
         return this.mHiddenViews.contains(view);
     }
-
+    // 使view不可见
     void hide(View view) {
         int offset = this.mCallback.indexOfChild(view);
         if (offset < 0) {
@@ -190,7 +153,7 @@ class ChildHelper {
             this.hideViewInternal(view);
         }
     }
-
+    // 使view可见
     void unhide(View view) {
         int offset = this.mCallback.indexOfChild(view);
         if (offset < 0) {
@@ -200,6 +163,43 @@ class ChildHelper {
         } else {
             this.mBucket.clear(offset);
             this.unhideViewInternal(view);
+        }
+    }
+    // 使view不可见
+    private void hideViewInternal(View child) {
+        this.mHiddenViews.add(child);
+        this.mCallback.onEnteredHiddenState(child);
+    }
+    // 使view可见
+    private boolean unhideViewInternal(View child) {
+        if (this.mHiddenViews.remove(child)) {
+            this.mCallback.onLeftHiddenState(child);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private int getOffset(int index) {
+        if (index < 0) {
+            return -1;
+        } else {
+            int limit = this.mCallback.getChildCount();
+
+            int diff;
+            for(int offset = index; offset < limit; offset += diff) {
+                int removedBefore = this.mBucket.countOnesBefore(offset);
+                diff = index - (offset - removedBefore);
+                if (diff == 0) {
+                    while(this.mBucket.get(offset)) {
+                        ++offset;
+                    }
+
+                    return offset;
+                }
+            }
+
+            return -1;
         }
     }
 
@@ -226,6 +226,9 @@ class ChildHelper {
         }
     }
 
+    /***
+     都是调用了RecyclerView或其父类的方法进行的操作
+     */
     interface Callback {
         int getChildCount();
 
@@ -266,14 +269,12 @@ class ChildHelper {
             } else {
                 this.mData |= 1L << index;
             }
-
         }
 
         private void ensureNext() {
             if (this.mNext == null) {
                 this.mNext = new ChildHelper.Bucket();
             }
-
         }
 
         void clear(int index) {
@@ -284,7 +285,6 @@ class ChildHelper {
             } else {
                 this.mData &= ~(1L << index);
             }
-
         }
 
         boolean get(int index) {
@@ -301,7 +301,6 @@ class ChildHelper {
             if (this.mNext != null) {
                 this.mNext.reset();
             }
-
         }
 
         void insert(int index, boolean value) {
@@ -325,7 +324,6 @@ class ChildHelper {
                     this.mNext.insert(0, lastBit);
                 }
             }
-
         }
 
         boolean remove(int index) {
@@ -354,14 +352,26 @@ class ChildHelper {
 
         int countOnesBefore(int index) {
             if (this.mNext == null) {
-                return index >= 64 ? Long.bitCount(this.mData) : Long.bitCount(this.mData & (1L << index) - 1L);
+                return index >= 64
+                        ?
+                        Long.bitCount(this.mData)
+                        :
+                        Long.bitCount(this.mData & (1L << index) - 1L);
             } else {
-                return index < 64 ? Long.bitCount(this.mData & (1L << index) - 1L) : this.mNext.countOnesBefore(index - 64) + Long.bitCount(this.mData);
+                return index < 64
+                        ?
+                        Long.bitCount(this.mData & (1L << index) - 1L)
+                        :
+                        this.mNext.countOnesBefore(index - 64) + Long.bitCount(this.mData);
             }
         }
 
         public String toString() {
-            return this.mNext == null ? Long.toBinaryString(this.mData) : this.mNext.toString() + "xx" + Long.toBinaryString(this.mData);
+            return this.mNext == null
+                    ?
+                    Long.toBinaryString(this.mData)
+                    :
+                    this.mNext.toString() + "xx" + Long.toBinaryString(this.mData);
         }
-    }
+    }// Bucket end
 }
