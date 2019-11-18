@@ -84,7 +84,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
-    static final String TAG = "RecyclerView";
+    static final String TAG = "alexander RecyclerView";
     static final boolean DEBUG = false;
     static final boolean VERBOSE_TRACING = false;
     private static final int[] NESTED_SCROLLING_ATTRS = new int[]{16843830};
@@ -720,42 +720,44 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
     }
 
     public void setLayoutManager(@Nullable RecyclerView.LayoutManager layout) {
-        if (layout != this.mLayout) {
-            this.stopScroll();
-            if (this.mLayout != null) {
-                if (this.mItemAnimator != null) {
-                    this.mItemAnimator.endAnimations();
-                }
-
-                this.mLayout.removeAndRecycleAllViews(this.mRecycler);
-                this.mLayout.removeAndRecycleScrapInt(this.mRecycler);
-                this.mRecycler.clear();
-                if (this.mIsAttached) {
-                    this.mLayout.dispatchDetachedFromWindow(this, this.mRecycler);
-                }
-
-                this.mLayout.setRecyclerView((RecyclerView)null);
-                this.mLayout = null;
-            } else {
-                this.mRecycler.clear();
-            }
-
-            this.mChildHelper.removeAllViewsUnfiltered();
-            this.mLayout = layout;
-            if (layout != null) {
-                if (layout.mRecyclerView != null) {
-                    throw new IllegalArgumentException("LayoutManager " + layout + " is already attached to a RecyclerView:" + layout.mRecyclerView.exceptionLabel());
-                }
-
-                this.mLayout.setRecyclerView(this);
-                if (this.mIsAttached) {
-                    this.mLayout.dispatchAttachedToWindow(this);
-                }
-            }
-
-            this.mRecycler.updateViewCacheSize();
-            this.requestLayout();
+        if (layout == null || layout == this.mLayout) {
+            return;
         }
+
+        this.stopScroll();
+        if (this.mLayout != null) {
+            if (this.mItemAnimator != null) {
+                this.mItemAnimator.endAnimations();
+            }
+
+            this.mLayout.removeAndRecycleAllViews(this.mRecycler);
+            this.mLayout.removeAndRecycleScrapInt(this.mRecycler);
+            this.mRecycler.clear();
+            if (this.mIsAttached) {
+                this.mLayout.dispatchDetachedFromWindow(this, this.mRecycler);
+            }
+
+            this.mLayout.setRecyclerView((RecyclerView)null);
+            this.mLayout = null;
+        } else {
+            this.mRecycler.clear();
+        }
+
+        this.mChildHelper.removeAllViewsUnfiltered();
+        this.mLayout = layout;
+        if (layout != null) {
+            if (layout.mRecyclerView != null) {
+                throw new IllegalArgumentException("LayoutManager " + layout + " is already attached to a RecyclerView:" + layout.mRecyclerView.exceptionLabel());
+            }
+
+            this.mLayout.setRecyclerView(this);
+            if (this.mIsAttached) {
+                this.mLayout.dispatchAttachedToWindow(this);
+            }
+        }
+
+        this.mRecycler.updateViewCacheSize();
+        this.requestLayout();
     }
 
     public void setOnFlingListener(@Nullable RecyclerView.OnFlingListener onFlingListener) {
@@ -3520,16 +3522,29 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
 
     public abstract static class ItemAnimator {
         public static final int FLAG_CHANGED = 2;
-        public static final int FLAG_REMOVED = 8;
         public static final int FLAG_INVALIDATED = 4;
+        public static final int FLAG_REMOVED = 8;
         public static final int FLAG_MOVED = 2048;
         public static final int FLAG_APPEARED_IN_PRE_LAYOUT = 4096;
         private RecyclerView.ItemAnimator.ItemAnimatorListener mListener = null;
-        private ArrayList<RecyclerView.ItemAnimator.ItemAnimatorFinishedListener> mFinishedListeners = new ArrayList();
+        private ArrayList<RecyclerView.ItemAnimator.ItemAnimatorFinishedListener>
+                mFinishedListeners = new ArrayList();
         private long mAddDuration = 120L;
         private long mRemoveDuration = 120L;
         private long mMoveDuration = 250L;
         private long mChangeDuration = 250L;
+
+        public interface ItemAnimatorFinishedListener {
+            void onAnimationsFinished();
+        }
+
+        interface ItemAnimatorListener {
+            void onAnimationFinished(@NonNull RecyclerView.ViewHolder var1);
+        }
+
+        @Retention(RetentionPolicy.SOURCE)
+        public @interface AdapterChanges {
+        }
 
         public ItemAnimator() {
         }
@@ -3692,21 +3707,10 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
                 return this;
             }
         }
-
-        public interface ItemAnimatorFinishedListener {
-            void onAnimationsFinished();
-        }
-
-        interface ItemAnimatorListener {
-            void onAnimationFinished(@NonNull RecyclerView.ViewHolder var1);
-        }
-
-        @Retention(RetentionPolicy.SOURCE)
-        public @interface AdapterChanges {
-        }
     }
 
-    private class ItemAnimatorRestoreListener implements RecyclerView.ItemAnimator.ItemAnimatorListener {
+    private class ItemAnimatorRestoreListener
+            implements RecyclerView.ItemAnimator.ItemAnimatorListener {
         ItemAnimatorRestoreListener() {
         }
 
@@ -3893,7 +3897,6 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
             for(int i = this.mObservers.size() - 1; i >= 0; --i) {
                 ((RecyclerView.AdapterDataObserver)this.mObservers.get(i)).onChanged();
             }
-
         }
 
         public void notifyItemRangeChanged(int positionStart, int itemCount) {
@@ -3904,28 +3907,24 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
             for(int i = this.mObservers.size() - 1; i >= 0; --i) {
                 ((RecyclerView.AdapterDataObserver)this.mObservers.get(i)).onItemRangeChanged(positionStart, itemCount, payload);
             }
-
         }
 
         public void notifyItemRangeInserted(int positionStart, int itemCount) {
             for(int i = this.mObservers.size() - 1; i >= 0; --i) {
                 ((RecyclerView.AdapterDataObserver)this.mObservers.get(i)).onItemRangeInserted(positionStart, itemCount);
             }
-
         }
 
         public void notifyItemRangeRemoved(int positionStart, int itemCount) {
             for(int i = this.mObservers.size() - 1; i >= 0; --i) {
                 ((RecyclerView.AdapterDataObserver)this.mObservers.get(i)).onItemRangeRemoved(positionStart, itemCount);
             }
-
         }
 
         public void notifyItemMoved(int fromPosition, int toPosition) {
             for(int i = this.mObservers.size() - 1; i >= 0; --i) {
                 ((RecyclerView.AdapterDataObserver)this.mObservers.get(i)).onItemRangeMoved(fromPosition, toPosition, 1);
             }
-
         }
     }
 
@@ -4802,6 +4801,7 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
                 this.mChildHelper = recyclerView.mChildHelper;
                 this.mWidth = recyclerView.getWidth();
                 this.mHeight = recyclerView.getHeight();
+                // 刚开始时都为0
                 MLog.d(TAG, "LayoutManager setRecyclerView() mWidth: " + mWidth +
                         " mHeight: " + mHeight);
             }
@@ -6159,8 +6159,8 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
 
         public Recycler() {
             this.mUnmodifiableAttachedScrap = Collections.unmodifiableList(this.mAttachedScrap);
-            this.mRequestedCacheMax = 2;
-            this.mViewCacheMax = 2;
+            this.mRequestedCacheMax = DEFAULT_CACHE_SIZE;
+            this.mViewCacheMax = DEFAULT_CACHE_SIZE;
         }
 
         public void clear() {
@@ -6180,7 +6180,6 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
             for(int i = this.mCachedViews.size() - 1; i >= 0 && this.mCachedViews.size() > this.mViewCacheMax; --i) {
                 this.recycleCachedViewAt(i);
             }
-
         }
 
         @NonNull
@@ -6417,14 +6416,12 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
                     ViewCompat.setAccessibilityDelegate(itemView, RecyclerView.this.mAccessibilityDelegate.getItemDelegate());
                 }
             }
-
         }
 
         private void invalidateDisplayListInt(RecyclerView.ViewHolder holder) {
             if (holder.itemView instanceof ViewGroup) {
                 this.invalidateDisplayListInt((ViewGroup)holder.itemView, false);
             }
-
         }
 
         private void invalidateDisplayListInt(ViewGroup viewGroup, boolean invalidateThis) {
@@ -6479,7 +6476,6 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
             if (RecyclerView.ALLOW_THREAD_GAP_WORK) {
                 RecyclerView.this.mPrefetchRegistry.clearPrefetchPositions();
             }
-
         }
 
         void recycleCachedViewAt(int cachedViewIndex) {
@@ -6913,7 +6909,7 @@ public class RecyclerView extends ViewGroup implements ScrollingView, NestedScro
             }
 
         }
-    }
+    }// Recycler end
 
     public static class RecycledViewPool {
         private static final int DEFAULT_MAX_SCRAP = 5;

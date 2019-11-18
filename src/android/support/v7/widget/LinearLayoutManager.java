@@ -36,7 +36,7 @@ public class LinearLayoutManager
         extends LayoutManager
         implements ViewDropHandler, ScrollVectorProvider {
 
-    private static final String TAG = "LinearLayoutManager";
+    private static final String TAG = "alexander LinearLayoutManager";
     static final boolean DEBUG = false;
     public static final int HORIZONTAL = 0;
     public static final int VERTICAL = 1;
@@ -103,9 +103,10 @@ public class LinearLayoutManager
 
     public void onLayoutChildren(Recycler recycler, State state) {
         MLog.d(TAG, "onLayoutChildren() start");
-        MLog.d(TAG, "onLayoutChildren() itemCount: " + state.getItemCount() + " " + getItemCount());
-        MLog.d(TAG, "onLayoutChildren() width    : " + getWidth());
-        MLog.d(TAG, "onLayoutChildren() height   : " + getHeight());
+        MLog.d(TAG, "onLayoutChildren() itemCount: " + state.getItemCount() +
+                " " + getItemCount() +
+                " " + getChildCount());
+        MLog.d(TAG, "onLayoutChildren() width: " + getWidth() + " height: " + getHeight());
         if ((this.mPendingSavedState != null || this.mPendingScrollPosition != -1)
                 && state.getItemCount() == 0) {
             this.removeAndRecycleAllViews(recycler);
