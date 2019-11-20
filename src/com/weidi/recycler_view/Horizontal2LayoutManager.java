@@ -1,6 +1,10 @@
 package com.weidi.recycler_view;
 
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.util.SparseArray;
@@ -9,13 +13,19 @@ import android.view.ViewGroup;
 
 import com.weidi.log.MLog;
 
+import java.util.ArrayList;
+
 /***
- itemView大小都一样时
+ 进化版
  */
 
-public class HorizontalCardLayoutManager extends LayoutManager {
+public class Horizontal2LayoutManager extends LayoutManager {
 
-    private static final String TAG = "alexander HorizontalCardLayoutManager";
+    private static final String TAG = "alexander Horizontal2LayoutManager";
+
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Recycler mRecycler;
+    private RecyclerView.State mState;
 
     // RecyclerView.HORIZONTAL = 0
     // RecyclerView.VERTICAL   = 1
@@ -34,8 +44,15 @@ public class HorizontalCardLayoutManager extends LayoutManager {
     // 保存每个itemView四个点的坐标
     private SparseArray<Rect> mAllItemsRect = new SparseArray<Rect>();
 
-    public HorizontalCardLayoutManager() {
-        mItemSpace = 36;
+    private static final float mNormalScaleValue = 1.0f;
+    private float mScaleValue1 = 1.3f;
+    private float mScaleValue2 = 1.6f;
+
+    // 存放可见的View的position,有了这个集合,就能马上知道第一个和最后一个可见View的position
+    private ArrayList<Integer> mItemsVisiblePositionList = new ArrayList<Integer>();
+
+    public Horizontal2LayoutManager() {
+        mItemSpace = 0;
         mOrientation = RecyclerView.HORIZONTAL;
     }
 
@@ -55,6 +72,9 @@ public class HorizontalCardLayoutManager extends LayoutManager {
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
         // 父类没干活(没有意义的代码不用让它执行)
         // super.onLayoutChildren(recycler, state);
+
+        mRecycler = recycler;
+        mState = state;
 
         MLog.d(TAG, "onLayoutChildren() start");
         onLayoutChildrenImpl(recycler, state);
@@ -87,8 +107,84 @@ public class HorizontalCardLayoutManager extends LayoutManager {
         return scrollHorizontallyByImpl(dx, recycler, state);
     }
 
+    public void setRecyclerView(RecyclerView recyclerView) {
+        mRecyclerView = recyclerView;
+    }
+
     public void setItemSpace(int itemSpace) {
         mItemSpace = itemSpace;
+    }
+
+    public int getFirstVisiblePosition() {
+        if (mItemsVisiblePositionList.isEmpty()) {
+            return -1;
+        }
+        return mItemsVisiblePositionList.get(0);
+    }
+
+    public int getLastVisiblePosition() {
+        if (mItemsVisiblePositionList.isEmpty()) {
+            return -1;
+        }
+        return mItemsVisiblePositionList.get(mItemsVisiblePositionList.size() - 1);
+    }
+
+    private View mMaxScaleView;
+    private int mMaxScalePosition = -1;
+
+    // 放大的View就是选中状态
+    public boolean isSelected(int position) {
+        return mMaxScalePosition == position;
+    }
+
+    public void onItemClick(int position) {
+        if (mMaxScaleView == null
+                || mRecyclerView == null
+                || mMaxScalePosition == position
+                || position < 0
+                || position >= getItemCount()) {
+            return;
+        }
+
+        View view = findViewByPosition(position);
+        if (view == null) {
+            MLog.d(TAG, "onItemClick() view == null");
+            return;
+        }
+
+        MLog.d(TAG, "onItemClick() start");
+        MLog.d(TAG, "onItemClick() mMaxScalePosition: " + mMaxScalePosition +
+                " position: " + position);
+
+        mMaxScaleView.setScaleX(mNormalScaleValue);
+        mMaxScaleView.setScaleY(mNormalScaleValue);
+        view.setScaleX(mScaleValue2);
+        view.setScaleY(mScaleValue2);
+        mMaxScaleView = view;
+        mMaxScalePosition = position;
+        MLog.d(TAG, "onItemClick() mMaxScalePosition: " + mMaxScalePosition);
+
+        // 移动放大的View到中间位置
+        Rect itemViewRect = mAllItemsRect.get(position);
+        int viewMiddlePosition = itemViewRect.left + (int) (view.getWidth() / 2);
+        int screenMiddlePosition = mScrollHorizontallyOffset + (int) (getWidth() / 2);
+        MLog.d(TAG, "onItemClick() viewMiddlePosition: " + viewMiddlePosition +
+                " screenMiddlePosition: " + screenMiddlePosition);
+        if (viewMiddlePosition != screenMiddlePosition) {
+            mRecyclerView.scrollBy((viewMiddlePosition - screenMiddlePosition), 0);
+        }
+
+        MLog.d(TAG, "onItemClick() end");
+    }
+
+    public void scrollToPosition(int position) {
+
+    }
+
+    public void smoothScrollToPosition(RecyclerView recyclerView,
+                                       RecyclerView.State state,
+                                       int position) {
+
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -113,6 +209,10 @@ public class HorizontalCardLayoutManager extends LayoutManager {
          */
         detachAndScrapAttachedViews(recycler);
 
+        mItemsVisiblePositionList.clear();
+        Rect visibleRect = new Rect(0, 450, getWidth(), 450 + getHeight());
+
+        View indexView = null;
         int widthOffset = 0;
         int itemCount = getItemCount();
         // 针对每一个itemView进行布局
@@ -129,20 +229,49 @@ public class HorizontalCardLayoutManager extends LayoutManager {
             /*MLog.d(TAG, "onLayoutChildren() itemWidth: " + itemWidth +
                     " itemHeight: " + itemHeight);*/
 
+            // 为了能够滚动到第0个位置
+            if (widthOffset == 0) {
+                widthOffset = getWidth() / 2 - itemWidth / 2;
+            }
+
             Rect itemViewRect = mAllItemsRect.get(i);
             if (itemViewRect == null) {
                 itemViewRect = new Rect();
             }
-            itemViewRect.set(widthOffset, 0, widthOffset + itemWidth, itemHeight);
+            itemViewRect.set(widthOffset, 450, widthOffset + itemWidth, 450 + itemHeight);
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
+
+            if (itemViewRect.left < (int) (getWidth() / 2)
+                    && itemViewRect.right > (int) (getWidth() / 2)) {
+                indexView = itemView;
+                mMaxScaleView = itemView;
+                mMaxScalePosition = i;
+
+                itemView.setScaleX(mScaleValue2);
+                itemView.setScaleY(mScaleValue2);
+            }
+
+            if (Rect.intersects(visibleRect, itemViewRect)) {
+                mItemsVisiblePositionList.add(i);
+            }
 
             if (itemCount > 1 && i < itemCount - 1) {
                 widthOffset += itemWidth + mItemSpace;
             } else {
                 widthOffset += itemWidth;
             }
+
+            // 为了能够滚动到第itemCount - 1个位置
+            if (i == itemCount - 1) {
+                widthOffset += getWidth() / 2 - itemWidth / 2;
+            }
+        }
+
+        if (indexView != null) {
+            removeView(indexView);
+            addView(indexView);
         }
 
         mAllItemsTotalWidth = widthOffset;
@@ -157,6 +286,12 @@ public class HorizontalCardLayoutManager extends LayoutManager {
                 " getPaddingTop: " + getPaddingTop() +
                 " getPaddingRight: " + getPaddingRight() +
                 " getPaddingBottom: " + getPaddingBottom());
+
+        /*MLog.d(TAG, "onLayoutChildrenImpl()=================================");
+        for (Integer position : mItemsVisiblePositionList) {
+            MLog.d(TAG, "onLayoutChildrenImpl() position: " + position);
+        }
+        MLog.d(TAG, "onLayoutChildrenImpl()---------------------------------");*/
     }
 
     /***
@@ -196,51 +331,106 @@ public class HorizontalCardLayoutManager extends LayoutManager {
         offsetChildrenHorizontal(-dx);
 
         // recycle view
-        handleRecycle(recycler, state);
+        handleRecycle(dx, recycler, state);
 
         return dx;
     }
 
-    private void handleRecycle(RecyclerView.Recycler recycler,
+    private void handleRecycle(int dx,
+                               RecyclerView.Recycler recycler,
                                RecyclerView.State state) {
         detachAndScrapAttachedViews(recycler);
 
         // 可见范围的一个坐标
         Rect visibleRect = new Rect(
                 mScrollHorizontallyOffset,
-                0,
+                450,
                 mScrollHorizontallyOffset + getWidth(),
-                getHeight());
+                450 + getHeight());
 
         // 将滑出屏幕的view进行回收
-        int childCount = getChildCount();
+        /*int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             // 某个坐标与可见范围的坐标如果没有交叉点,那么remove
             if (!Rect.intersects(visibleRect, mAllItemsRect.get(i))) {
                 // removeAndRecycleView(getChildAt(i), recycler);
                 removeAndRecycleViewAt(i, recycler);
-                // MLog.d(TAG, "handleRecycle() removeView i: " + i);
+                MLog.d(TAG, "handleRecycle() removeView i: " + i);
             }
-        }
+        }*/
 
+        mItemsVisiblePositionList.clear();
+        View selectedView = null;
         // 在可见区域出现的ItemView重新进行layout
         int itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
             Rect itemViewRect = mAllItemsRect.get(i);
-            // 某个坐标与可见范围的坐标如果有交叉点,那么add
-            if (Rect.intersects(visibleRect, itemViewRect)) {
+            View scrap = recycler.getViewForPosition(i);
+            if (!Rect.intersects(visibleRect, itemViewRect)) {
+                removeAndRecycleView(scrap, recycler);
+                // MLog.d(TAG, "handleRecycle() removeView i: " + i);
+                // 不能调用,发生空指针
+                // removeAndRecycleViewAt(i, recycler);
+            } else {
+                // 某个坐标与可见范围的坐标如果有交叉点,那么add
                 // MLog.d(TAG, "handleRecycle() addView i: " + i);
-                View scrap = recycler.getViewForPosition(i);
-                addView(scrap);
+                if (itemViewRect.left < mScrollHorizontallyOffset + (int) (getWidth() / 2)
+                        && itemViewRect.right >
+                        mScrollHorizontallyOffset + (int) (getWidth() / 2)) {
+                    addView(scrap);
+                    selectedView = scrap;
+                    mMaxScaleView = scrap;
+                    mMaxScalePosition = i;
+                } else {
+                    addView(scrap, 0);
+                }
                 measureChildWithMargins(scrap, 0, 0);
+
+                scrap.setScaleX(mNormalScaleValue);
+                scrap.setScaleY(mNormalScaleValue);
 
                 layoutDecorated(scrap,
                         itemViewRect.left - mScrollHorizontallyOffset,
                         itemViewRect.top,
                         itemViewRect.right - mScrollHorizontallyOffset,
                         itemViewRect.bottom);
+
+                mItemsVisiblePositionList.add(i);
             }
         }
+
+        if (selectedView != null) {
+            selectedView.setScaleX(mScaleValue2);
+            selectedView.setScaleY(mScaleValue2);
+
+            // 希望selectedView在RecyclerView的正中间
+            // mUiHandler.sendEmptyMessageDelayed(1, 300);
+        }
+
+        /*MLog.d(TAG, "handleRecycle()=================================");
+        for (Integer position : mItemsVisiblePositionList) {
+            MLog.d(TAG, "handleRecycle() position: " + position);
+        }
+        MLog.d(TAG, "handleRecycle()---------------------------------");*/
     }
+
+    private Handler mUiHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            // super.handleMessage(msg);
+
+            if (mRecyclerView == null
+                    || mMaxScaleView == null
+                    || mMaxScalePosition == -1) {
+                return;
+            }
+            Rect itemViewRect = mAllItemsRect.get(mMaxScalePosition);
+            int viewMiddlePosition = itemViewRect.left + (int) (mMaxScaleView.getWidth() / 2);
+            int screenMiddlePosition = mScrollHorizontallyOffset + (int) (getWidth() / 2);
+            if (viewMiddlePosition != screenMiddlePosition) {
+                mRecyclerView.scrollBy((viewMiddlePosition - screenMiddlePosition), 0);
+            }
+        }
+    };
 
 }

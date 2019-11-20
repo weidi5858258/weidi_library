@@ -10,37 +10,36 @@ import android.view.ViewGroup;
 import com.weidi.log.MLog;
 
 /***
-
+ 以后自定义LayoutManager时,按照这个模板写
+ 只支持所有itemView的大小一样的情况
  */
 
-public class HorizontalCard2LayoutManager extends LayoutManager {
+public class VerticalLayoutManager extends LayoutManager {
 
-    private static final String TAG = "alexander HorizontalCard2LayoutManager";
+    private static final String TAG = "alexander VerticalLayoutManager";
 
     // RecyclerView.HORIZONTAL = 0
-    // RecyclerView.VERTICAL   = 1
+    // RecyclerView.VERTICAL = 1
     private int mOrientation;
 
     // 两个itemView之间的间距
     private int mItemSpace = 16;
-    // 所有itemView的总宽度.如果存在mItemSpace不为0的话,再加上(getItemCount()-1)个这样的高度
-    private int mAllItemsTotalWidth;
-    // 这是一个累积的结果,比如不断从左往右滑动,这个过程滑动了多少距离
-    private int mScrollHorizontallyOffset = 0;
+    // 所有itemView的总高度.如果存在mItemSpace不为0的话,再加上(getItemCount()-1)个这样的高度
+    private int mAllItemsTotalHeight;
+    // 这是一个累积的结果,比如不断从下往上滑动,这个过程滑动了多少距离
+    private int mScrollVerticallyOffset = 0;
     // RecyclerView的可用高度
-    private int mRvUsableWidth = 0;
+    private int mRvUsableHeight = 0;
     // 手指允许滑动的距离.
-    private int mAllowScrollHorizontallyOffset = 0;
+    // 比方说mItemsTotalHeight总高度1280像素,在屏幕中已经显示了280像素,那么用户还能够滚动1000像素就到达底部了
+    private int mAllowScrollVerticallyOffset = 0;
     // 保存每个itemView四个点的坐标
     private SparseArray<Rect> mAllItemsRect = new SparseArray<Rect>();
 
-    private static final float mNormalScaleValue = 1.0f;
-    private float mScaleValue1 = 1.3f;
-    private float mScaleValue2 = 1.6f;
-
-    public HorizontalCard2LayoutManager() {
-        mItemSpace = 0;
-        mOrientation = RecyclerView.HORIZONTAL;
+    public VerticalLayoutManager() {
+        mItemSpace = 16;
+        mOrientation = RecyclerView.VERTICAL;
+        // mOrientation = RecyclerView.HORIZONTAL;
     }
 
     @Override
@@ -99,10 +98,18 @@ public class HorizontalCard2LayoutManager extends LayoutManager {
 
     private void onLayoutChildrenImpl(RecyclerView.Recycler recycler, RecyclerView.State state) {
         // state.getItemCount() = getItemCount()
+        // 第一次被调用时196 0
+        // 第二次被调用时196 196
+        // 第三次被调用时196 196
+        // 第四次被调用时196 6
         MLog.d(TAG, "onLayoutChildrenImpl()" +
                 " getItemCount: " + getItemCount() +
                 " getChildCount: " + getChildCount());
         // RecyclerView的可见宽高
+        // 第一次被调用时width: 0    height: 0
+        // 第二次被调用时width: 850  height: 0
+        // 第三次被调用时width: 1189 height: 582
+        // 第四次被调用时width: 1189 height: 582
         MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());
 
         if (state.getItemCount() <= 0 || state.isPreLayout()) {
@@ -117,7 +124,7 @@ public class HorizontalCard2LayoutManager extends LayoutManager {
          */
         detachAndScrapAttachedViews(recycler);
 
-        int widthOffset = 0;
+        int heightOffset = 0;
         int itemCount = getItemCount();
         // 针对每一个itemView进行布局
         for (int i = 0; i < itemCount; i++) {
@@ -128,39 +135,56 @@ public class HorizontalCard2LayoutManager extends LayoutManager {
             // 通知测量itemView
             measureChildWithMargins(itemView, 0, 0);
 
+            // 得到itemView的宽高
             int itemWidth = getDecoratedMeasuredWidth(itemView);
+            // 一般在layout中会设置一定的高度
             int itemHeight = getDecoratedMeasuredHeight(itemView);
             /*MLog.d(TAG, "onLayoutChildren() itemWidth: " + itemWidth +
                     " itemHeight: " + itemHeight);*/
+
+            /***
+             每一个itemView针对RecyclerView的可用宽高进行设置
+             left  : 当前itemView距离RecyclerView可用宽度的左边多少距离
+             top   :
+             right : 当前itemView距离RecyclerView可用宽度的右边多少距离
+             bottom:
+             left与right设置不好的话,itemView中某些内容可能显示不了
+             */
+            /*int left = 100;
+            int top = heightOffset;
+            int right = itemWidth - 100;
+            int bottom = heightOffset + itemHeight;
+            // 布局
+            // layoutDecorated(itemView, left, top, right, bottom);
+            layoutDecoratedWithMargins(itemView, left, top, right, bottom);*/
 
             Rect itemViewRect = mAllItemsRect.get(i);
             if (itemViewRect == null) {
                 itemViewRect = new Rect();
             }
-            itemViewRect.set(widthOffset, 450, widthOffset + itemWidth, 450 + itemHeight);
+            itemViewRect.set(100, heightOffset, itemWidth - 100, heightOffset + itemHeight);
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
 
-            if (itemViewRect.left < (int) (getWidth() / 2)
-                    && itemViewRect.right > (int) (getWidth() / 2)) {
-                itemView.setScaleX(mScaleValue2);
-                itemView.setScaleY(mScaleValue2);
+            // 使得最后一个itemView的下面没有mItemSpace大小的间距
+            if (itemCount > 1 && i < itemCount - 1) {
+                heightOffset += itemHeight + mItemSpace;
+            } else {
+                // 只有一条内容时itemView下面不要有间距了,这样不好看
+                heightOffset += itemHeight;
             }
 
-            if (itemCount > 1 && i < itemCount - 1) {
-                widthOffset += itemWidth + mItemSpace;
-            } else {
-                widthOffset += itemWidth;
-            }
+            // 旋转itemView
+            // itemView.setRotation(45f);
         }
 
-        mAllItemsTotalWidth = widthOffset;
-        mRvUsableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
-        mAllowScrollHorizontallyOffset = mAllItemsTotalWidth - mRvUsableWidth;
-        MLog.d(TAG, "onLayoutChildrenImpl() mAllItemsTotalWidth: " + mAllItemsTotalWidth +
-                " mRvUsableWidth: " + mRvUsableWidth +
-                " mAllowScrollHorizontallyOffset: " + mAllowScrollHorizontallyOffset +
+        mAllItemsTotalHeight = heightOffset;
+        mRvUsableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+        mAllowScrollVerticallyOffset = mAllItemsTotalHeight - mRvUsableHeight;
+        MLog.d(TAG, "onLayoutChildrenImpl() mAllItemsTotalHeight: " + mAllItemsTotalHeight +
+                " mRvUsableHeight: " + mRvUsableHeight +
+                " mAllowScrollVerticallyOffset: " + mAllowScrollVerticallyOffset +
                 " getPaddingStart: " + getPaddingStart() +
                 " getPaddingEnd: " + getPaddingEnd() +
                 " getPaddingLeft: " + getPaddingLeft() +
@@ -177,51 +201,61 @@ public class HorizontalCard2LayoutManager extends LayoutManager {
                                        RecyclerView.State state) {
         // MLog.d(TAG, "scrollVerticallyByImpl() dy: " + dy);
         // super.scrollVerticallyBy(dy, recycler, state);
-        return 0;
+
+        if (mScrollVerticallyOffset + dy < 0) {
+            // MLog.d(TAG, "scrollVerticallyByImpl() 抵达上边界");
+            /***
+             dy < 0
+             怎么理解?
+             刚显示列表内容时,mScrollVerticallyOffset为0,
+             手指往下滑动时dy < 0,由于列表已经到达上边界,
+             因此当前条件满足,走到这里面.如果offsetChildrenVertical(int)这个方法的参数值不为0,
+             那么此时列表内容跟RecyclerView的距离差开了dy,这样显然不行.因此此时应该把dy修正为0,
+             这样抵达上边界后列表内容才不会继续往下滚动.
+             */
+            dy = -mScrollVerticallyOffset;
+        } else if (mAllItemsTotalHeight > mRvUsableHeight
+                && mScrollVerticallyOffset + dy > mAllowScrollVerticallyOffset) {
+            // MLog.d(TAG, "scrollVerticallyByImpl() 抵达下边界");
+            /***
+             dy > 0
+             */
+            dy = mAllowScrollVerticallyOffset - mScrollVerticallyOffset;
+        } else {
+            // 手指从下往上滑动时,dy为正,列表内容不断显示下面部分,手指越往上滑动,列表内容越接近RecyclerView的下边界
+            // 手指从上往下滑动时,dy为负,列表内容不断显示上面部分,手指越往下滑动,列表内容越接近RecyclerView的上边界
+        }
+
+        mScrollVerticallyOffset += dy;
+        /*MLog.d(TAG, "scrollVerticallyByImpl() dy: " + dy +
+                " mScrollVerticallyOffset: " + mScrollVerticallyOffset);*/
+
+        // 平移容器内的itemView
+        offsetChildrenVertical(-dy);
+
+        // recycle view
+        handleRecycle(recycler, state);
+
+        return dy;
     }
 
     private int scrollHorizontallyByImpl(int dx,
                                          RecyclerView.Recycler recycler,
                                          RecyclerView.State state) {
-        // MLog.d(TAG, "scrollHorizontallyByImpl() dx: " + dx);
         // super.scrollHorizontallyBy(dx, recycler, state);
-
-        if (mScrollHorizontallyOffset + dx < 0) {
-            // MLog.d(TAG, "scrollHorizontallyByImpl() 抵达上边界");
-            dx = -mScrollHorizontallyOffset;
-        } else if (mAllItemsTotalWidth > mRvUsableWidth
-                && mScrollHorizontallyOffset + dx > mAllowScrollHorizontallyOffset) {
-            // MLog.d(TAG, "scrollHorizontallyByImpl() 抵达下边界");
-            dx = mAllowScrollHorizontallyOffset - mScrollHorizontallyOffset;
-        } else {
-            // 手指从右往左滑动时,dx为正,列表内容不断显示右边部分,手指越往左滑动,列表内容越接近RecyclerView的右边界
-            // 手指从左往右滑动时,dx为负,列表内容不断显示左边部分,手指越往右滑动,列表内容越接近RecyclerView的左边界
-        }
-
-        mScrollHorizontallyOffset += dx;
-        /*MLog.d(TAG, "scrollHorizontallyByImpl() dx: " + dx +
-                " mScrollHorizontallyOffset: " + mScrollHorizontallyOffset);*/
-
-        // 平移容器内的itemView
-        offsetChildrenHorizontal(-dx);
-
-        // recycle view
-        handleRecycle(dx, recycler, state);
-
-        return dx;
+        return 0;
     }
 
-    private void handleRecycle(int dx,
-                               RecyclerView.Recycler recycler,
+    private void handleRecycle(RecyclerView.Recycler recycler,
                                RecyclerView.State state) {
         detachAndScrapAttachedViews(recycler);
 
         // 可见范围的一个坐标
         Rect visibleRect = new Rect(
-                mScrollHorizontallyOffset,
                 0,
-                mScrollHorizontallyOffset + getWidth(),
-                getHeight());
+                mScrollVerticallyOffset,
+                getWidth(),
+                mScrollVerticallyOffset + getHeight());
 
         // 将滑出屏幕的view进行回收
         int childCount = getChildCount();
@@ -230,46 +264,26 @@ public class HorizontalCard2LayoutManager extends LayoutManager {
             if (!Rect.intersects(visibleRect, mAllItemsRect.get(i))) {
                 // removeAndRecycleView(getChildAt(i), recycler);
                 removeAndRecycleViewAt(i, recycler);
-                // MLog.d(TAG, "handleRecycle() removeView i: " + i);
+                MLog.d(TAG, "handleRecycle() removeView i: " + i);
             }
         }
 
-        View selectedView = null;
         // 在可见区域出现的ItemView重新进行layout
         int itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
             Rect itemViewRect = mAllItemsRect.get(i);
             // 某个坐标与可见范围的坐标如果有交叉点,那么add
             if (Rect.intersects(visibleRect, itemViewRect)) {
-                // MLog.d(TAG, "handleRecycle() addView i: " + i);
                 View scrap = recycler.getViewForPosition(i);
-                if (itemViewRect.left < mScrollHorizontallyOffset + (int) (getWidth() / 2)
-                        && itemViewRect.right >
-                        mScrollHorizontallyOffset + (int) (getWidth() / 2)) {
-                    addView(scrap);
-                    selectedView = scrap;
-                } else {
-                    addView(scrap, 0);
-                }
+                addView(scrap);
                 measureChildWithMargins(scrap, 0, 0);
 
-                scrap.setScaleX(mNormalScaleValue);
-                scrap.setScaleY(mNormalScaleValue);
-
                 layoutDecorated(scrap,
-                        itemViewRect.left - mScrollHorizontallyOffset,
-                        itemViewRect.top,
-                        itemViewRect.right - mScrollHorizontallyOffset,
-                        itemViewRect.bottom);
+                        itemViewRect.left,
+                        itemViewRect.top - mScrollVerticallyOffset,
+                        itemViewRect.right,
+                        itemViewRect.bottom - mScrollVerticallyOffset);
             }
-        }
-
-        if (selectedView != null) {
-            selectedView.setScaleX(mScaleValue2);
-            selectedView.setScaleY(mScaleValue2);
-
-            // 希望selectedView在RecyclerView的正中间
-
         }
     }
 
