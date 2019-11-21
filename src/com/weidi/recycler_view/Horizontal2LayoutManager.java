@@ -16,7 +16,7 @@ import com.weidi.log.MLog;
 import java.util.ArrayList;
 
 /***
- 进化版
+ 进化版(缩放,中间的itemView被放大)
  */
 
 public class Horizontal2LayoutManager extends LayoutManager {
@@ -46,22 +46,30 @@ public class Horizontal2LayoutManager extends LayoutManager {
 
     private static final float mNormalScaleValue = 1.0f;
     private float mScaleValue1 = 1.3f;
-    private float mScaleValue2 = 1.6f;
+    private float mScaleValue2 = 1.2f;
 
-    // 存放可见的View的position,有了这个集合,就能马上知道第一个和最后一个可见View的position
+    // 存放可见View的position,有了这个集合,就能马上知道第一个和最后一个可见View的position
     private ArrayList<Integer> mItemsVisiblePositionList = new ArrayList<Integer>();
 
     public Horizontal2LayoutManager() {
-        mItemSpace = 0;
+        mItemSpace = 16;
         mOrientation = RecyclerView.HORIZONTAL;
     }
 
     @Override
     public RecyclerView.LayoutParams generateDefaultLayoutParams() {
-        // 作用于itemView
-        return new RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+        MLog.d(TAG, "generateDefaultLayoutParams() getWidth: " + getWidth());
+        if (getWidth() == 0) {
+            // 作用于itemView
+            return new RecyclerView.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+        } else {
+            int itemWidth = (int) (getWidth() / 5);
+            return new RecyclerView.LayoutParams(
+                    itemWidth,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     /***
@@ -107,6 +115,7 @@ public class Horizontal2LayoutManager extends LayoutManager {
         return scrollHorizontallyByImpl(dx, recycler, state);
     }
 
+    // 必须要设进来
     public void setRecyclerView(RecyclerView recyclerView) {
         mRecyclerView = recyclerView;
     }
@@ -197,7 +206,8 @@ public class Horizontal2LayoutManager extends LayoutManager {
         // RecyclerView的可见宽高
         MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());
 
-        if (state.getItemCount() <= 0 || state.isPreLayout()) {
+        if (state.getItemCount() == 0 ||
+                (getChildCount() == 0 && state.isPreLayout())) {
             MLog.d(TAG, "onLayoutChildrenImpl() removeAndRecycleAllViews return");
             removeAndRecycleAllViews(recycler);
             return;
@@ -240,8 +250,14 @@ public class Horizontal2LayoutManager extends LayoutManager {
             }
             itemViewRect.set(widthOffset, 450, widthOffset + itemWidth, 450 + itemHeight);
             mAllItemsRect.put(i, itemViewRect);
-            layoutDecorated(itemView,
-                    itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
+            // itemView在可见范围内
+            if (Rect.intersects(visibleRect, itemViewRect)) {
+                layoutDecorated(itemView,
+                        itemViewRect.left, itemViewRect.top,
+                        itemViewRect.right, itemViewRect.bottom);
+                mItemsVisiblePositionList.add(i);
+                MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
+            }
 
             if (itemViewRect.left < (int) (getWidth() / 2)
                     && itemViewRect.right > (int) (getWidth() / 2)) {
@@ -251,10 +267,6 @@ public class Horizontal2LayoutManager extends LayoutManager {
 
                 itemView.setScaleX(mScaleValue2);
                 itemView.setScaleY(mScaleValue2);
-            }
-
-            if (Rect.intersects(visibleRect, itemViewRect)) {
-                mItemsVisiblePositionList.add(i);
             }
 
             if (itemCount > 1 && i < itemCount - 1) {
@@ -364,32 +376,31 @@ public class Horizontal2LayoutManager extends LayoutManager {
         // 在可见区域出现的ItemView重新进行layout
         int itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
+            View scrapView = recycler.getViewForPosition(i);
             Rect itemViewRect = mAllItemsRect.get(i);
-            View scrap = recycler.getViewForPosition(i);
             if (!Rect.intersects(visibleRect, itemViewRect)) {
-                removeAndRecycleView(scrap, recycler);
-                // MLog.d(TAG, "handleRecycle() removeView i: " + i);
                 // 不能调用,发生空指针
                 // removeAndRecycleViewAt(i, recycler);
+                removeAndRecycleView(scrapView, recycler);
             } else {
                 // 某个坐标与可见范围的坐标如果有交叉点,那么add
-                // MLog.d(TAG, "handleRecycle() addView i: " + i);
-                if (itemViewRect.left < mScrollHorizontallyOffset + (int) (getWidth() / 2)
-                        && itemViewRect.right >
+                if (itemViewRect.left - mItemSpace <=
+                        mScrollHorizontallyOffset + (int) (getWidth() / 2)
+                        && itemViewRect.right + mItemSpace >=
                         mScrollHorizontallyOffset + (int) (getWidth() / 2)) {
-                    addView(scrap);
-                    selectedView = scrap;
-                    mMaxScaleView = scrap;
+                    addView(scrapView);
+                    selectedView = scrapView;
+                    mMaxScaleView = scrapView;
                     mMaxScalePosition = i;
                 } else {
-                    addView(scrap, 0);
+                    addView(scrapView, 0);
                 }
-                measureChildWithMargins(scrap, 0, 0);
+                measureChildWithMargins(scrapView, 0, 0);
 
-                scrap.setScaleX(mNormalScaleValue);
-                scrap.setScaleY(mNormalScaleValue);
+                scrapView.setScaleX(mNormalScaleValue);
+                scrapView.setScaleY(mNormalScaleValue);
 
-                layoutDecorated(scrap,
+                layoutDecorated(scrapView,
                         itemViewRect.left - mScrollHorizontallyOffset,
                         itemViewRect.top,
                         itemViewRect.right - mScrollHorizontallyOffset,
@@ -404,7 +415,8 @@ public class Horizontal2LayoutManager extends LayoutManager {
             selectedView.setScaleY(mScaleValue2);
 
             // 希望selectedView在RecyclerView的正中间
-            // mUiHandler.sendEmptyMessageDelayed(1, 300);
+            mUiHandler.removeMessages(1);
+            mUiHandler.sendEmptyMessageDelayed(1, 100);
         }
 
         /*MLog.d(TAG, "handleRecycle()=================================");
@@ -418,12 +430,12 @@ public class Horizontal2LayoutManager extends LayoutManager {
         @Override
         public void handleMessage(Message msg) {
             // super.handleMessage(msg);
-
             if (mRecyclerView == null
                     || mMaxScaleView == null
                     || mMaxScalePosition == -1) {
                 return;
             }
+
             Rect itemViewRect = mAllItemsRect.get(mMaxScalePosition);
             int viewMiddlePosition = itemViewRect.left + (int) (mMaxScaleView.getWidth() / 2);
             int screenMiddlePosition = mScrollHorizontallyOffset + (int) (getWidth() / 2);
