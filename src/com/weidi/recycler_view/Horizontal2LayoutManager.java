@@ -16,7 +16,7 @@ import com.weidi.log.MLog;
 import java.util.ArrayList;
 
 /***
- 进化版(缩放,中间的itemView被放大)
+ 进化版(缩放,也就是中间的itemView被放大,其他itemView的大小都一样)
  */
 
 public class Horizontal2LayoutManager extends LayoutManager {
@@ -206,10 +206,20 @@ public class Horizontal2LayoutManager extends LayoutManager {
         // RecyclerView的可见宽高
         MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());
 
-        if (state.getItemCount() == 0 ||
+        /*if (state.getItemCount() == 0 ||
                 (getChildCount() == 0 && state.isPreLayout())) {
-            MLog.d(TAG, "onLayoutChildrenImpl() removeAndRecycleAllViews return");
             removeAndRecycleAllViews(recycler);
+            return;
+        }*/
+
+        if (getItemCount() == 0) {
+            detachAndScrapAttachedViews(recycler);
+            MLog.d(TAG, "onLayoutChildrenImpl() detachAndScrapAttachedViews return");
+            return;
+        }
+        if (getChildCount() == 0 && state.isPreLayout()) {
+            // state.isPreLayout()是支持动画的
+            MLog.d(TAG, "onLayoutChildrenImpl() return");
             return;
         }
 

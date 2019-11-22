@@ -101,9 +101,14 @@ public class HorizontalLayoutManager extends LayoutManager {
         // RecyclerView的可见宽高
         MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());
 
-        if (state.getItemCount() <= 0 || state.isPreLayout()) {
-            MLog.d(TAG, "onLayoutChildrenImpl() removeAndRecycleAllViews return");
-            removeAndRecycleAllViews(recycler);
+        if (getItemCount() == 0) {
+            detachAndScrapAttachedViews(recycler);
+            MLog.d(TAG, "onLayoutChildrenImpl() detachAndScrapAttachedViews return");
+            return;
+        }
+        if (getChildCount() == 0 && state.isPreLayout()) {
+            // state.isPreLayout()是支持动画的
+            MLog.d(TAG, "onLayoutChildrenImpl() return");
             return;
         }
 

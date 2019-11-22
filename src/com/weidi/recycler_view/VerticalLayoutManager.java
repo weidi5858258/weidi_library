@@ -11,7 +11,7 @@ import com.weidi.log.MLog;
 
 /***
  以后自定义LayoutManager时,按照这个模板写
- 只支持所有itemView的大小一样的情况
+ 只支持itemView的大小都一样的情况
  */
 
 public class VerticalLayoutManager extends LayoutManager {
@@ -39,7 +39,6 @@ public class VerticalLayoutManager extends LayoutManager {
     public VerticalLayoutManager() {
         mItemSpace = 16;
         mOrientation = RecyclerView.VERTICAL;
-        // mOrientation = RecyclerView.HORIZONTAL;
     }
 
     @Override
@@ -112,9 +111,14 @@ public class VerticalLayoutManager extends LayoutManager {
         // 第四次被调用时width: 1189 height: 582
         MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());
 
-        if (state.getItemCount() <= 0 || state.isPreLayout()) {
-            MLog.d(TAG, "onLayoutChildrenImpl() removeAndRecycleAllViews return");
-            removeAndRecycleAllViews(recycler);
+        if (getItemCount() == 0) {
+            detachAndScrapAttachedViews(recycler);
+            MLog.d(TAG, "onLayoutChildrenImpl() detachAndScrapAttachedViews return");
+            return;
+        }
+        if (getChildCount() == 0 && state.isPreLayout()) {
+            // state.isPreLayout()是支持动画的
+            MLog.d(TAG, "onLayoutChildrenImpl() return");
             return;
         }
 
