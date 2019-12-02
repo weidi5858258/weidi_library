@@ -12,6 +12,7 @@ import com.weidi.log.MLog;
 /***
  以后自定义LayoutManager时,按照这个模板写
  只支持itemView的大小都一样的情况
+ 然后刚开始就把所有的View都layout出来了
  */
 
 public class VerticalLayoutManager extends LayoutManager {

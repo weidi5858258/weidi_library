@@ -10,7 +10,8 @@ import android.view.ViewGroup;
 import com.weidi.log.MLog;
 
 /***
- itemView大小都一样时
+ 只支持itemView的大小都一样的情况
+ 然后刚开始就把所有的View都layout出来了
  */
 
 public class HorizontalLayoutManager extends LayoutManager {
