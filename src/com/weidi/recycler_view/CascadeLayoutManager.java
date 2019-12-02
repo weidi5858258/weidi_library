@@ -179,9 +179,7 @@ public class CascadeLayoutManager extends LayoutManager {
         detachAndScrapAttachedViews(recycler);
 
         mItemsVisiblePositionList.clear();
-        Rect visibleRect = new Rect(0, 450, getWidth(), 450 + getHeight());
 
-        View indexView = null;
         int widthOffset = 0;
         // 针对每一个itemView进行布局
         for (int i = 0; i < itemCount; i++) {
@@ -205,7 +203,11 @@ public class CascadeLayoutManager extends LayoutManager {
                     widthSpace / 2 + itemWidth,
                     heightSpace / 2 + itemHeight);
 
-
+            // 0 不动(最底层)
+            // 1 60
+            // 2 100
+            float translationY = 50 * i;
+            itemView.setTranslationY(translationY);
         }
 
 

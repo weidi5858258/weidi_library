@@ -144,6 +144,28 @@ public class Horizontal2LayoutManager extends LayoutManager {
         return mMaxScalePosition == position;
     }
 
+    /***
+     如何使用:
+     mAdapter.setOnItemClickListener(
+     new HorizontalCardAdapter.OnItemClickListener() {
+    @Override
+    public void onItemClick(int type, int position, int number) {
+    if (!mLayoutManager.isSelected(position)) {
+    mLayoutManager.onItemClick(position);
+    return;
+    }
+
+    if (type == ON_CLICK) {
+    // do something
+    MLog.d(TAG, "alexander onItemClick() do something");
+    // mAdapter.addItem(position + 1, mAdapter.getItemCount());
+    } else {
+    MLog.d(TAG, "alexander onItemLongClick() do something");
+    // mAdapter.removeItem(position);
+    }
+    }
+    });
+     */
     public void onItemClick(int position) {
         if (mMaxScaleView == null
                 || mRecyclerView == null
