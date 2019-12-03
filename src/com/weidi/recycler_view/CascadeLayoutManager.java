@@ -204,12 +204,11 @@ public class CascadeLayoutManager extends LayoutManager {
                     heightSpace / 2 + itemHeight);
 
             // 0 不动(最底层)
-            // 1 60
+            // 1 50
             // 2 100
             float translationY = 50 * i;
             itemView.setTranslationY(translationY);
         }
-
 
         mAllItemsTotalWidth = widthOffset;
         mRvUsableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
