@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 
 import com.weidi.log.MLog;
 
+import java.util.ArrayList;
+
 /***
  以后自定义LayoutManager时,按照这个模板写
  只支持itemView的大小都一样的情况
@@ -19,8 +21,8 @@ public class VerticalLayoutManager extends LayoutManager {
 
     private static final String TAG = "alexander VerticalLayoutManager";
 
-    // RecyclerView.HORIZONTAL = 0
-    // RecyclerView.VERTICAL = 1
+    // RecyclerView.HORIZONTAL = 0 水平
+    // RecyclerView.VERTICAL   = 1 竖直
     private int mOrientation;
 
     // 两个itemView之间的间距
@@ -36,6 +38,9 @@ public class VerticalLayoutManager extends LayoutManager {
     private int mAllowScrollVerticallyOffset = 0;
     // 保存每个itemView四个点的坐标
     private SparseArray<Rect> mAllItemsRect = new SparseArray<Rect>();
+
+    // 存放可见View的position,有了这个集合,就能马上知道第一个和最后一个可见View的position
+    //private ArrayList<Integer> mItemsVisiblePositionList = new ArrayList<Integer>();
 
     public VerticalLayoutManager() {
         mItemSpace = 16;
@@ -94,6 +99,20 @@ public class VerticalLayoutManager extends LayoutManager {
         mItemSpace = itemSpace;
     }
 
+    /*public int getFirstVisiblePosition() {
+        if (mItemsVisiblePositionList.isEmpty()) {
+            return -1;
+        }
+        return mItemsVisiblePositionList.get(0);
+    }
+
+    public int getLastVisiblePosition() {
+        if (mItemsVisiblePositionList.isEmpty()) {
+            return -1;
+        }
+        return mItemsVisiblePositionList.get(mItemsVisiblePositionList.size() - 1);
+    }*/
+
     /////////////////////////////////////////////////////////////////////
 
     private void onLayoutChildrenImpl(RecyclerView.Recycler recycler, RecyclerView.State state) {
@@ -128,6 +147,9 @@ public class VerticalLayoutManager extends LayoutManager {
          表示这些View处于可被重用状态(非显示中)
          */
         detachAndScrapAttachedViews(recycler);
+
+        //mItemsVisiblePositionList.clear();
+        //Rect visibleRect = new Rect(0, 450, getWidth(), 450 + getHeight());
 
         int heightOffset = 0;
         int itemCount = getItemCount();
@@ -171,6 +193,15 @@ public class VerticalLayoutManager extends LayoutManager {
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
+
+            // itemView在可见范围内
+            /*if (Rect.intersects(visibleRect, itemViewRect)) {
+                layoutDecorated(itemView,
+                        itemViewRect.left, itemViewRect.top,
+                        itemViewRect.right, itemViewRect.bottom);
+                mItemsVisiblePositionList.add(i);
+                MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
+            }*/
 
             // 使得最后一个itemView的下面没有mItemSpace大小的间距
             if (itemCount > 1 && i < itemCount - 1) {
@@ -273,6 +304,8 @@ public class VerticalLayoutManager extends LayoutManager {
             }
         }
 
+        //mItemsVisiblePositionList.clear();
+
         // 在可见区域出现的ItemView重新进行layout
         int itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
@@ -288,6 +321,8 @@ public class VerticalLayoutManager extends LayoutManager {
                         itemViewRect.top - mScrollVerticallyOffset,
                         itemViewRect.right,
                         itemViewRect.bottom - mScrollVerticallyOffset);
+
+                //mItemsVisiblePositionList.add(i);
             }
         }
     }
