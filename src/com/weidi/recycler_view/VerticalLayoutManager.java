@@ -17,6 +17,19 @@ import java.util.ArrayList;
  以后自定义LayoutManager时,按照这个模板写
  只支持itemView的大小都一样的情况
  然后刚开始就把所有的View都layout出来了
+
+ 执行过程:
+ 1.如果一次性加载完所有Item,那么刚开始时只会调用onLayoutChildren.
+ 2.如果是加载多次内容的情况.那么刚开始时调用onLayoutChildren,然后手指移动到最后加载更多,
+ 就会先调用scrollVerticallyBy或者scrollHorizontallyBy,接着再调用onLayoutChildren.
+
+ 我的情况是:
+ 第一次加载20个Item,调用onLayoutChildren.
+ 然后移动到最后一个Item时,再加载20个Item,然后再调用onLayoutChildren.
+ 手指移动时会调用scrollVerticallyBy.
+ 再次加载内容时,等到加载完后,会自动滚动到顶部.
+ 所以我在onLayoutChildren方法里加了scrollVerticallyBy(1, recycler, state);
+ 这样就看起来就像是加载完内容停在原来位置,没有滚动到顶部.
  */
 
 public class VerticalLayoutManager extends LinearLayoutManager {
@@ -123,10 +136,6 @@ public class VerticalLayoutManager extends LinearLayoutManager {
         return mItemsVisiblePositionList.size();
     }
 
-    public int getAllItemsTotalHeight() {
-        return mAllItemsTotalHeight;
-    }
-
     /////////////////////////////////////////////////////////////////////
 
     private void onLayoutChildrenImpl(RecyclerView.Recycler recycler, RecyclerView.State state) {
@@ -165,8 +174,13 @@ public class VerticalLayoutManager extends LinearLayoutManager {
          */
         detachAndScrapAttachedViews(recycler);
 
-        mItemsVisiblePositionList.clear();
-        Rect visibleRect = new Rect(0, 0, getWidth(), getHeight());
+        Rect visibleRect = null;
+        boolean isEmpty = false;
+        if (mItemsVisiblePositionList.isEmpty()) {
+            isEmpty = true;
+            mItemsVisiblePositionList.clear();
+            visibleRect = new Rect(0, 0, getWidth(), getHeight());
+        }
 
         int heightOffset = 0;
         int itemCount = getItemCount();
@@ -212,13 +226,15 @@ public class VerticalLayoutManager extends LinearLayoutManager {
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
 
-            // itemView在可见范围内
-            if (Rect.intersects(visibleRect, itemViewRect)) {
+            if (isEmpty) {
+                // itemView在可见范围内
+                if (Rect.intersects(visibleRect, itemViewRect)) {
                 /*layoutDecorated(itemView,
                         itemViewRect.left, itemViewRect.top,
                         itemViewRect.right, itemViewRect.bottom);*/
-                mItemsVisiblePositionList.add(i);
-                MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
+                    mItemsVisiblePositionList.add(i);
+                    MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
+                }
             }
 
             // 使得最后一个itemView的下面没有mItemSpace大小的间距
@@ -245,6 +261,16 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 " getPaddingTop: " + getPaddingTop() +
                 " getPaddingRight: " + getPaddingRight() +
                 " getPaddingBottom: " + getPaddingBottom());
+
+        if (!isEmpty) {
+            scrollVerticallyBy(1, recycler, state);
+        }
+
+        if (!isEmpty) {
+            for (Integer position : mItemsVisiblePositionList) {
+                MLog.d(TAG, "onLayoutChildrenImpl() position: " + position);
+            }
+        }
     }
 
     /***
