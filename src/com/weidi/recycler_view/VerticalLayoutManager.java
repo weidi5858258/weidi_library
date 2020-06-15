@@ -262,9 +262,7 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 " getPaddingRight: " + getPaddingRight() +
                 " getPaddingBottom: " + getPaddingBottom());
 
-        if (!isEmpty) {
-            scrollVerticallyBy(1, recycler, state);
-        }
+        scrollVerticallyBy(1, recycler, state);
 
         if (!isEmpty) {
             for (Integer position : mItemsVisiblePositionList) {
