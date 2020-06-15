@@ -1,6 +1,8 @@
 package com.weidi.recycler_view;
 
+import android.content.Context;
 import android.graphics.Rect;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.util.SparseArray;
@@ -17,7 +19,7 @@ import java.util.ArrayList;
  然后刚开始就把所有的View都layout出来了
  */
 
-public class VerticalLayoutManager extends LayoutManager {
+public class VerticalLayoutManager extends LinearLayoutManager {
 
     private static final String TAG = "alexander VerticalLayoutManager";
 
@@ -40,9 +42,10 @@ public class VerticalLayoutManager extends LayoutManager {
     private SparseArray<Rect> mAllItemsRect = new SparseArray<Rect>();
 
     // 存放可见View的position,有了这个集合,就能马上知道第一个和最后一个可见View的position
-    //private ArrayList<Integer> mItemsVisiblePositionList = new ArrayList<Integer>();
+    private ArrayList<Integer> mItemsVisiblePositionList = new ArrayList<Integer>();
 
-    public VerticalLayoutManager() {
+    public VerticalLayoutManager(Context context) {
+        super(context);
         mItemSpace = 16;
         mOrientation = RecyclerView.VERTICAL;
     }
@@ -64,9 +67,9 @@ public class VerticalLayoutManager extends LayoutManager {
         // 父类没干活(没有意义的代码不用让它执行)
         // super.onLayoutChildren(recycler, state);
 
-        MLog.d(TAG, "onLayoutChildren() start");
+        MLog.i(TAG, "onLayoutChildren() start");
         onLayoutChildrenImpl(recycler, state);
-        MLog.d(TAG, "onLayoutChildren() end");
+        MLog.i(TAG, "onLayoutChildren() end");
     }
 
     @Override
@@ -99,7 +102,7 @@ public class VerticalLayoutManager extends LayoutManager {
         mItemSpace = itemSpace;
     }
 
-    /*public int getFirstVisiblePosition() {
+    public int getFirstVisiblePosition() {
         if (mItemsVisiblePositionList.isEmpty()) {
             return -1;
         }
@@ -111,7 +114,18 @@ public class VerticalLayoutManager extends LayoutManager {
             return -1;
         }
         return mItemsVisiblePositionList.get(mItemsVisiblePositionList.size() - 1);
-    }*/
+    }
+
+    public int getVisibleItemCount() {
+        if (mItemsVisiblePositionList.isEmpty()) {
+            return 0;
+        }
+        return mItemsVisiblePositionList.size();
+    }
+
+    public int getAllItemsTotalHeight() {
+        return mAllItemsTotalHeight;
+    }
 
     /////////////////////////////////////////////////////////////////////
 
@@ -122,7 +136,9 @@ public class VerticalLayoutManager extends LayoutManager {
         // 第三次被调用时196 196
         // 第四次被调用时196 6
         MLog.d(TAG, "onLayoutChildrenImpl()" +
+                // 总的个数
                 " getItemCount: " + getItemCount() +
+                // 可见的个数
                 " getChildCount: " + getChildCount());
         // RecyclerView的可见宽高
         // 第一次被调用时width: 0    height: 0
@@ -137,6 +153,7 @@ public class VerticalLayoutManager extends LayoutManager {
             return;
         }
         if (getChildCount() == 0 && state.isPreLayout()) {
+            detachAndScrapAttachedViews(recycler);
             // state.isPreLayout()是支持动画的
             MLog.d(TAG, "onLayoutChildrenImpl() return");
             return;
@@ -148,8 +165,8 @@ public class VerticalLayoutManager extends LayoutManager {
          */
         detachAndScrapAttachedViews(recycler);
 
-        //mItemsVisiblePositionList.clear();
-        //Rect visibleRect = new Rect(0, 450, getWidth(), 450 + getHeight());
+        mItemsVisiblePositionList.clear();
+        Rect visibleRect = new Rect(0, 0, getWidth(), getHeight());
 
         int heightOffset = 0;
         int itemCount = getItemCount();
@@ -189,19 +206,20 @@ public class VerticalLayoutManager extends LayoutManager {
             if (itemViewRect == null) {
                 itemViewRect = new Rect();
             }
-            itemViewRect.set(100, heightOffset, itemWidth - 100, heightOffset + itemHeight);
+            // 每个item的坐标点
+            itemViewRect.set(120, heightOffset, itemWidth - 120, heightOffset + itemHeight);
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
 
             // itemView在可见范围内
-            /*if (Rect.intersects(visibleRect, itemViewRect)) {
-                layoutDecorated(itemView,
+            if (Rect.intersects(visibleRect, itemViewRect)) {
+                /*layoutDecorated(itemView,
                         itemViewRect.left, itemViewRect.top,
-                        itemViewRect.right, itemViewRect.bottom);
+                        itemViewRect.right, itemViewRect.bottom);*/
                 mItemsVisiblePositionList.add(i);
                 MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
-            }*/
+            }
 
             // 使得最后一个itemView的下面没有mItemSpace大小的间距
             if (itemCount > 1 && i < itemCount - 1) {
@@ -218,7 +236,7 @@ public class VerticalLayoutManager extends LayoutManager {
         mAllItemsTotalHeight = heightOffset;
         mRvUsableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
         mAllowScrollVerticallyOffset = mAllItemsTotalHeight - mRvUsableHeight;
-        MLog.d(TAG, "onLayoutChildrenImpl() mAllItemsTotalHeight: " + mAllItemsTotalHeight +
+        MLog.d(TAG, "onLayoutChildrenImpl() \nmAllItemsTotalHeight: " + mAllItemsTotalHeight +
                 " mRvUsableHeight: " + mRvUsableHeight +
                 " mAllowScrollVerticallyOffset: " + mAllowScrollVerticallyOffset +
                 " getPaddingStart: " + getPaddingStart() +
@@ -304,7 +322,7 @@ public class VerticalLayoutManager extends LayoutManager {
             }
         }
 
-        //mItemsVisiblePositionList.clear();
+        mItemsVisiblePositionList.clear();
 
         // 在可见区域出现的ItemView重新进行layout
         int itemCount = getItemCount();
@@ -322,9 +340,15 @@ public class VerticalLayoutManager extends LayoutManager {
                         itemViewRect.right,
                         itemViewRect.bottom - mScrollVerticallyOffset);
 
-                //mItemsVisiblePositionList.add(i);
+                mItemsVisiblePositionList.add(i);
             }
         }
+
+        /*MLog.d(TAG, "handleRecycle()=================================");
+        for (Integer position : mItemsVisiblePositionList) {
+            MLog.d(TAG, "handleRecycle() position: " + position);
+        }
+        MLog.d(TAG, "handleRecycle()---------------------------------");*/
     }
 
 }
