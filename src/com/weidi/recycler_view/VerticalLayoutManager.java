@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.weidi.log.MLog;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /***
  以后自定义LayoutManager时,按照这个模板写
@@ -134,6 +135,10 @@ public class VerticalLayoutManager extends LinearLayoutManager {
             return 0;
         }
         return mItemsVisiblePositionList.size();
+    }
+
+    public List<Integer> getVisiblePositions() {
+        return mItemsVisiblePositionList;
     }
 
     /////////////////////////////////////////////////////////////////////
