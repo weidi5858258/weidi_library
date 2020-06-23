@@ -34,7 +34,7 @@ import java.util.List;
 
 public class VerticalLayoutManager extends LinearLayoutManager {
 
-    private static final String TAG = "alexander VerticalLayoutManager";
+    private static final String TAG = "player_alexander VerticalLayoutManager";
 
     private RecyclerView mRecyclerView;
 
@@ -152,7 +152,7 @@ public class VerticalLayoutManager extends LinearLayoutManager {
     }
 
     // position的位置从0开始(第0个位置就是第1个Item)
-    public void smoothScrollToPosition(int position) {
+    public void smoothScrollToPosition(final int position) {
         if (position < 0
                 || position >= getItemCount()
                 || mItemsVisiblePositionList.isEmpty()) {
@@ -172,13 +172,17 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 scrollVerticallyBy(-dy, mRecycler, mState);
             } else if (position > getLastVisiblePosition()) {
                 // 向上滚动
-                Rect wantedRect = mAllItemsRect.get(position);
+                final Rect wantedRect = mAllItemsRect.get(position);
                 if (wantedRect == null) {
                     return;
                 }
-                //MLog.d(TAG, "smoothScrollToPosition() wantedRect: " + wantedRect.toString());
+
                 int dy = wantedRect.bottom - getHeight() - mScrollVerticallyOffset;
                 scrollVerticallyBy(dy, mRecycler, mState);
+                // 下面的方式比较好理解
+                /*scrollVerticallyBy(-mScrollVerticallyOffset, mRecycler, mState);
+                int dy = wantedRect.bottom - getHeight();
+                scrollVerticallyBy(dy, mRecycler, mState);*/
             }
         }
     }
@@ -302,7 +306,8 @@ public class VerticalLayoutManager extends LinearLayoutManager {
         mAllItemsTotalHeight = heightOffset;
         mRvUsableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
         mAllowScrollVerticallyOffset = mAllItemsTotalHeight - mRvUsableHeight;
-        MLog.d(TAG, "onLayoutChildrenImpl() \nmAllItemsTotalHeight: " + mAllItemsTotalHeight +
+        MLog.d(TAG, "onLayoutChildrenImpl()\n" +
+                " mAllItemsTotalHeight: " + mAllItemsTotalHeight +
                 " mRvUsableHeight: " + mRvUsableHeight +
                 " mAllowScrollVerticallyOffset: " + mAllowScrollVerticallyOffset +
                 " getPaddingStart: " + getPaddingStart() +
@@ -312,20 +317,22 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 " getPaddingRight: " + getPaddingRight() +
                 " getPaddingBottom: " + getPaddingBottom());
 
-        scrollVerticallyBy(1, recycler, state);
+        scrollVerticallyBy(-1, recycler, state);
 
-        /*if (!isEmpty) {
+        if (!isEmpty) {
+            StringBuilder sb = new StringBuilder();
             for (Integer position : mItemsVisiblePositionList) {
-                MLog.d(TAG, "onLayoutChildrenImpl() position: " + position);
+                sb.append(position);
+                sb.append(" ");
             }
-        }*/
+            MLog.d(TAG, "onLayoutChildrenImpl() position: " + sb.toString());
+        }
 
         /*itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
             Rect itemViewRect = mAllItemsRect.get(i);
             MLog.d(TAG, "onLayoutChildrenImpl() itemViewRect: " + itemViewRect.toString());
-        }
-        MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());*/
+        }*/
     }
 
     /***
@@ -425,11 +432,12 @@ public class VerticalLayoutManager extends LinearLayoutManager {
             }
         }
 
-        /*MLog.d(TAG, "handleRecycle()=================================");
+        /*StringBuilder sb = new StringBuilder();
         for (Integer position : mItemsVisiblePositionList) {
-            MLog.d(TAG, "handleRecycle() position: " + position);
+            sb.append(position);
+            sb.append(" ");
         }
-        MLog.d(TAG, "handleRecycle()---------------------------------");*/
+        MLog.d(TAG, "handleRecycle()        position: " + sb.toString());*/
     }
 
 }
