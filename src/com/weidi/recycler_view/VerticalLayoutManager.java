@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,10 +36,17 @@ public class VerticalLayoutManager extends LinearLayoutManager {
 
     private static final String TAG = "alexander VerticalLayoutManager";
 
+    private RecyclerView mRecyclerView;
+
+    private RecyclerView.Recycler mRecycler;
+
+    private RecyclerView.State mState;
+
     // RecyclerView.HORIZONTAL = 0 水平
     // RecyclerView.VERTICAL   = 1 竖直
     private int mOrientation;
 
+    private int mItemWidth, mItemHeight;
     // 两个itemView之间的间距
     private int mItemSpace = 16;
     // 所有itemView的总高度.如果存在mItemSpace不为0的话,再加上(getItemCount()-1)个这样的高度
@@ -112,6 +118,10 @@ public class VerticalLayoutManager extends LinearLayoutManager {
         return scrollHorizontallyByImpl(dx, recycler, state);
     }
 
+    public void setRecyclerView(RecyclerView recyclerView) {
+        mRecyclerView = recyclerView;
+    }
+
     public void setItemSpace(int itemSpace) {
         mItemSpace = itemSpace;
     }
@@ -141,9 +151,44 @@ public class VerticalLayoutManager extends LinearLayoutManager {
         return mItemsVisiblePositionList;
     }
 
+    // position的位置从0开始(第0个位置就是第1个Item)
+    public void smoothScrollToPosition(int position) {
+        if (position < 0
+                || position >= getItemCount()
+                || mItemsVisiblePositionList.isEmpty()) {
+            return;
+        }
+
+        MLog.d(TAG, "smoothScrollToPosition()   position: " + position);
+        if (mItemsVisiblePositionList.contains(position)) {
+
+        } else {
+            if (position < getFirstVisiblePosition()) {
+                // 向下滚动
+                int dy1 = getFirstVisiblePosition() * (mItemHeight + mItemSpace);
+                int dy2 = mScrollVerticallyOffset - dy1;
+                int dy = (getFirstVisiblePosition() - position) * (mItemHeight + mItemSpace);
+                dy += dy2;
+                scrollVerticallyBy(-dy, mRecycler, mState);
+            } else if (position > getLastVisiblePosition()) {
+                // 向上滚动
+                Rect wantedRect = mAllItemsRect.get(position);
+                if (wantedRect == null) {
+                    return;
+                }
+                //MLog.d(TAG, "smoothScrollToPosition() wantedRect: " + wantedRect.toString());
+                int dy = wantedRect.bottom - getHeight() - mScrollVerticallyOffset;
+                scrollVerticallyBy(dy, mRecycler, mState);
+            }
+        }
+    }
+
     /////////////////////////////////////////////////////////////////////
 
     private void onLayoutChildrenImpl(RecyclerView.Recycler recycler, RecyclerView.State state) {
+        mRecycler = recycler;
+        mState = state;
+
         // state.getItemCount() = getItemCount()
         // 第一次被调用时196 0
         // 第二次被调用时196 196
@@ -199,9 +244,9 @@ public class VerticalLayoutManager extends LinearLayoutManager {
             measureChildWithMargins(itemView, 0, 0);
 
             // 得到itemView的宽高
-            int itemWidth = getDecoratedMeasuredWidth(itemView);
+            mItemWidth = getDecoratedMeasuredWidth(itemView);
             // 一般在layout中会设置一定的高度
-            int itemHeight = getDecoratedMeasuredHeight(itemView);
+            mItemHeight = getDecoratedMeasuredHeight(itemView);
             /*MLog.d(TAG, "onLayoutChildren() itemWidth: " + itemWidth +
                     " itemHeight: " + itemHeight);*/
 
@@ -226,7 +271,7 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 itemViewRect = new Rect();
             }
             // 每个item的坐标点
-            itemViewRect.set(120, heightOffset, itemWidth - 120, heightOffset + itemHeight);
+            itemViewRect.set(120, heightOffset, mItemWidth - 120, heightOffset + mItemHeight);
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
@@ -238,21 +283,21 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                         itemViewRect.left, itemViewRect.top,
                         itemViewRect.right, itemViewRect.bottom);*/
                     mItemsVisiblePositionList.add(i);
-                    MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
+                    //MLog.d(TAG, "onLayoutChildrenImpl() i: " + i);
                 }
             }
 
             // 使得最后一个itemView的下面没有mItemSpace大小的间距
             if (itemCount > 1 && i < itemCount - 1) {
-                heightOffset += itemHeight + mItemSpace;
+                heightOffset += mItemHeight + mItemSpace;
             } else {
                 // 只有一条内容时itemView下面不要有间距了,这样不好看
-                heightOffset += itemHeight;
+                heightOffset += mItemHeight;
             }
 
             // 旋转itemView
             // itemView.setRotation(45f);
-        }
+        }// for (...) end
 
         mAllItemsTotalHeight = heightOffset;
         mRvUsableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
@@ -269,11 +314,18 @@ public class VerticalLayoutManager extends LinearLayoutManager {
 
         scrollVerticallyBy(1, recycler, state);
 
-        if (!isEmpty) {
+        /*if (!isEmpty) {
             for (Integer position : mItemsVisiblePositionList) {
                 MLog.d(TAG, "onLayoutChildrenImpl() position: " + position);
             }
+        }*/
+
+        /*itemCount = getItemCount();
+        for (int i = 0; i < itemCount; i++) {
+            Rect itemViewRect = mAllItemsRect.get(i);
+            MLog.d(TAG, "onLayoutChildrenImpl() itemViewRect: " + itemViewRect.toString());
         }
+        MLog.d(TAG, "onLayoutChildrenImpl() width: " + getWidth() + " height: " + getHeight());*/
     }
 
     /***
