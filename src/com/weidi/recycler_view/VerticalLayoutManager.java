@@ -319,14 +319,12 @@ public class VerticalLayoutManager extends LinearLayoutManager {
 
         scrollVerticallyBy(-1, recycler, state);
 
-        if (!isEmpty) {
-            StringBuilder sb = new StringBuilder();
-            for (Integer position : mItemsVisiblePositionList) {
-                sb.append(position);
-                sb.append(" ");
-            }
-            MLog.d(TAG, "onLayoutChildrenImpl() position: " + sb.toString());
+        StringBuilder sb = new StringBuilder();
+        for (Integer position : mItemsVisiblePositionList) {
+            sb.append(position);
+            sb.append(" ");
         }
+        MLog.d(TAG, "onLayoutChildrenImpl() visiblePosition: " + sb.toString());
 
         /*itemCount = getItemCount();
         for (int i = 0; i < itemCount; i++) {
