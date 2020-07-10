@@ -64,7 +64,8 @@ public class MyToast {
                     }
                     mToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
                     mToast.setGravity(
-                            Gravity.CENTER_HORIZONTAL | Gravity.TOP,
+                            //Gravity.CENTER_HORIZONTAL | Gravity.TOP,
+                            Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM,
                             0,
                             100);
                 }
