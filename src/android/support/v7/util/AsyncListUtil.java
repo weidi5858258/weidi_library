@@ -5,16 +5,15 @@
 
 package android.support.v7.util;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
-import android.support.annotation.WorkerThread;
 import android.support.v7.util.ThreadUtil.BackgroundCallback;
 import android.support.v7.util.ThreadUtil.MainThreadCallback;
 import android.support.v7.util.TileList.Tile;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
+
+import androidx.annotation.UiThread;
+import androidx.annotation.WorkerThread;
 
 public class AsyncListUtil<T> {
     static final String TAG = "AsyncListUtil";
@@ -42,7 +41,7 @@ public class AsyncListUtil<T> {
         Log.d("AsyncListUtil", "[MAIN] " + String.format(s, args));
     }
 
-    public AsyncListUtil(@NonNull Class<T> klass, int tileSize, @NonNull AsyncListUtil.DataCallback<T> dataCallback, @NonNull AsyncListUtil.ViewCallback viewCallback) {
+    public AsyncListUtil(Class<T> klass, int tileSize, AsyncListUtil.DataCallback<T> dataCallback, AsyncListUtil.ViewCallback viewCallback) {
         this.mRequestedGeneration = this.mDisplayedGeneration;
         this.mMissingPositions = new SparseIntArray();
         this.mMainThreadCallback = new MainThreadCallback<T>() {
@@ -249,7 +248,7 @@ public class AsyncListUtil<T> {
         this.mBackgroundProxy.refresh(++this.mRequestedGeneration);
     }
 
-    @Nullable
+
     public T getItem(int position) {
         if(position >= 0 && position < this.mItemCount) {
             T item = this.mTileList.getItemAt(position);
@@ -302,10 +301,10 @@ public class AsyncListUtil<T> {
         }
 
         @UiThread
-        public abstract void getItemRangeInto(@NonNull int[] var1);
+        public abstract void getItemRangeInto(int[] var1);
 
         @UiThread
-        public void extendRangeInto(@NonNull int[] range, @NonNull int[] outRange, int scrollHint) {
+        public void extendRangeInto(int[] range, int[] outRange, int scrollHint) {
             int fullRange = range[1] - range[0] + 1;
             int halfRange = fullRange / 2;
             outRange[0] = range[0] - (scrollHint == 1?fullRange:halfRange);
@@ -327,10 +326,10 @@ public class AsyncListUtil<T> {
         public abstract int refreshData();
 
         @WorkerThread
-        public abstract void fillData(@NonNull T[] var1, int var2, int var3);
+        public abstract void fillData(T[] var1, int var2, int var3);
 
         @WorkerThread
-        public void recycleData(@NonNull T[] data, int itemCount) {
+        public void recycleData(T[] data, int itemCount) {
         }
 
         @WorkerThread

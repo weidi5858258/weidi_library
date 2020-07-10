@@ -5,8 +5,7 @@
 
 package android.support.v7.widget;
 
-import android.support.annotation.Nullable;
-import android.support.v4.os.TraceCompat;
+
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.RecyclerView.Recycler;
 import android.support.v7.widget.RecyclerView.ViewHolder;
@@ -17,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+
+import androidx.core.os.TraceCompat;
 
 final class GapWorker implements Runnable {
     static final ThreadLocal<GapWorker> sGapWorker = new ThreadLocal();
@@ -146,7 +147,7 @@ final class GapWorker implements Runnable {
         }
     }
 
-    private void prefetchInnerRecyclerViewWithDeadline(@Nullable RecyclerView innerView, long deadlineNs) {
+    private void prefetchInnerRecyclerViewWithDeadline(RecyclerView innerView, long deadlineNs) {
         if (innerView != null) {
             if (innerView.mDataSetHasChangedAfterLayout && innerView.mChildHelper.getUnfilteredChildCount() != 0) {
                 innerView.removeAndRecycleViews();

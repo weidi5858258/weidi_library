@@ -5,19 +5,19 @@
 
 package android.support.v7.widget;
 
-import android.support.v4.util.Pools.Pool;
-import android.support.v4.util.Pools.SimplePool;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.core.util.Pools;
 
 class AdapterHelper implements android.support.v7.widget.OpReorderer.Callback {
     static final int POSITION_TYPE_INVISIBLE = 0;
     static final int POSITION_TYPE_NEW_OR_LAID_OUT = 1;
     private static final boolean DEBUG = false;
     private static final String TAG = "AHT";
-    private Pool<AdapterHelper.UpdateOp> mUpdateOpPool;
+    private Pools.Pool<UpdateOp> mUpdateOpPool;
     final ArrayList<AdapterHelper.UpdateOp> mPendingUpdates;
     final ArrayList<AdapterHelper.UpdateOp> mPostponedList;
     final AdapterHelper.Callback mCallback;
@@ -31,7 +31,7 @@ class AdapterHelper implements android.support.v7.widget.OpReorderer.Callback {
     }
 
     AdapterHelper(AdapterHelper.Callback callback, boolean disableRecycler) {
-        this.mUpdateOpPool = new SimplePool(30);
+        this.mUpdateOpPool = new Pools.SimplePool(30);
         this.mPendingUpdates = new ArrayList();
         this.mPostponedList = new ArrayList();
         this.mExistingUpdateTypes = 0;

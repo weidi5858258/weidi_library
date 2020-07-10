@@ -7,7 +7,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.util.LruCache;
+//import androidx.collection.LruCache;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -18,6 +18,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
+
+import androidx.collection.LruCache;
 
 /***
  Content Provider，asset，res的图片

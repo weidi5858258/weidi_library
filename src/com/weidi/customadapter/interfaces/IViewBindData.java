@@ -1,6 +1,6 @@
 package com.weidi.customadapter.interfaces;
 
-import android.support.annotation.Nullable;
+
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -17,7 +17,7 @@ public interface IViewBindData<T, CustomViewHolder> {
      * @param viewType    Choose the layout resource according to view type.
      * @return Created view holder.
      */
-    CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType);
+    CustomViewHolder onCreate(View convertView, ViewGroup parent, int viewType);
 
     /**
      * Method for binding data to view.

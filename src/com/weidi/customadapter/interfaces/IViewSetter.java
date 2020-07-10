@@ -5,12 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.annotation.FloatRange;
 import android.support.v7.widget.RecyclerView;
 import android.text.method.MovementMethod;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.ImageView;
+
+import androidx.annotation.FloatRange;
 
 /**
  * 由CustomViewHolder对象进行调用

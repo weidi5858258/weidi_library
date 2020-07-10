@@ -5,10 +5,6 @@
 
 package android.support.v7.util;
 
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.support.v7.widget.RecyclerView.Adapter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +12,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.VisibleForTesting;
 
 public class DiffUtil {
     private static final Comparator<DiffUtil.Snake> SNAKE_COMPARATOR = new Comparator<DiffUtil.Snake>() {
@@ -28,13 +27,13 @@ public class DiffUtil {
     private DiffUtil() {
     }
 
-    @NonNull
-    public static DiffUtil.DiffResult calculateDiff(@NonNull DiffUtil.Callback cb) {
+
+    public static DiffUtil.DiffResult calculateDiff(DiffUtil.Callback cb) {
         return calculateDiff(cb, true);
     }
 
-    @NonNull
-    public static DiffUtil.DiffResult calculateDiff(@NonNull DiffUtil.Callback cb, boolean detectMoves) {
+
+    public static DiffUtil.DiffResult calculateDiff(DiffUtil.Callback cb, boolean detectMoves) {
         int oldSize = cb.getOldListSize();
         int newSize = cb.getNewListSize();
         List<DiffUtil.Snake> snakes = new ArrayList();
@@ -339,11 +338,11 @@ public class DiffUtil {
             return false;
         }
 
-        public void dispatchUpdatesTo(@NonNull Adapter adapter) {
+        public void dispatchUpdatesTo(Adapter adapter) {
             this.dispatchUpdatesTo((ListUpdateCallback)(new AdapterListUpdateCallback(adapter)));
         }
 
-        public void dispatchUpdatesTo(@NonNull ListUpdateCallback updateCallback) {
+        public void dispatchUpdatesTo(ListUpdateCallback updateCallback) {
             BatchingListUpdateCallback batchingCallback;
             if(updateCallback instanceof BatchingListUpdateCallback) {
                 batchingCallback = (BatchingListUpdateCallback)updateCallback;
@@ -519,12 +518,12 @@ public class DiffUtil {
         public ItemCallback() {
         }
 
-        public abstract boolean areItemsTheSame(@NonNull T var1, @NonNull T var2);
+        public abstract boolean areItemsTheSame(T var1, T var2);
 
-        public abstract boolean areContentsTheSame(@NonNull T var1, @NonNull T var2);
+        public abstract boolean areContentsTheSame(T var1, T var2);
 
-        @Nullable
-        public Object getChangePayload(@NonNull T oldItem, @NonNull T newItem) {
+
+        public Object getChangePayload(T oldItem, T newItem) {
             return null;
         }
     }
@@ -541,7 +540,7 @@ public class DiffUtil {
 
         public abstract boolean areContentsTheSame(int var1, int var2);
 
-        @Nullable
+
         public Object getChangePayload(int oldItemPosition, int newItemPosition) {
             return null;
         }

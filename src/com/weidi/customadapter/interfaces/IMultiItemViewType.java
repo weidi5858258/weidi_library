@@ -1,7 +1,7 @@
 package com.weidi.customadapter.interfaces;
 
 
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 
 public interface IMultiItemViewType<T> {
 

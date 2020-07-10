@@ -1,6 +1,6 @@
 package com.weidi.customadapter.interfaces;
 
-import android.support.annotation.Nullable;
+
 import android.support.v7.util.DiffUtil;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public abstract class DefaultDiffCallback<T> extends DiffUtil.Callback {
 
     public abstract boolean areContentsTheSame(int oldItemPosition, int newItemPosition);
 
-    @Nullable
+
     @Override
     public Object getChangePayload(int oldItemPosition, int newItemPosition) {
         return super.getChangePayload(oldItemPosition, newItemPosition);

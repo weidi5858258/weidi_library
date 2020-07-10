@@ -2,8 +2,7 @@ package com.weidi.customadapter;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.Nullable;
+
 import android.support.v7.util.DiffUtil;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +15,8 @@ import com.weidi.customadapter.interfaces.IMultiItemViewType;
 
 import java.util.Iterator;
 import java.util.List;
+
+import androidx.annotation.LayoutRes;
 
 /**
  * 构造器必须要调用一下父类
@@ -51,7 +52,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType) {
+    public CustomViewHolder onCreate(View convertView, ViewGroup parent, int viewType) {
         @LayoutRes int resource;
         if (mMultiItemViewType != null) {
             resource = mMultiItemViewType.getLayoutId(viewType);

@@ -5,15 +5,15 @@
 
 package android.support.v7.widget;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.util.ArrayMap;
-import android.support.v4.util.LongSparseArray;
-import android.support.v4.util.Pools.Pool;
-import android.support.v4.util.Pools.SimplePool;
+
+
+import androidx.annotation.VisibleForTesting;
+import androidx.collection.ArrayMap;
+import androidx.collection.LongSparseArray;
+import androidx.core.util.Pools;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.RecyclerView.ItemAnimator.ItemHolderInfo;
+
 
 class ViewInfoStore {
     private static final boolean DEBUG = false;
@@ -46,12 +46,12 @@ class ViewInfoStore {
         return record != null && (record.flags & 1) != 0;
     }
 
-    @Nullable
+
     ItemHolderInfo popFromPreLayout(ViewHolder vh) {
         return this.popFromLayoutStep(vh, 4);
     }
 
-    @Nullable
+
     ItemHolderInfo popFromPostLayout(ViewHolder vh) {
         return this.popFromLayoutStep(vh, 8);
     }
@@ -199,11 +199,11 @@ class ViewInfoStore {
         static final int FLAG_PRE_AND_POST = 12;
         static final int FLAG_APPEAR_PRE_AND_POST = 14;
         int flags;
-        @Nullable
+
         ItemHolderInfo preInfo;
-        @Nullable
+
         ItemHolderInfo postInfo;
-        static Pool<ViewInfoStore.InfoRecord> sPool = new SimplePool(20);
+        static Pools.Pool<InfoRecord> sPool = new Pools.SimplePool(20);
 
         private InfoRecord() {
         }
@@ -228,11 +228,11 @@ class ViewInfoStore {
     }
 
     interface ProcessCallback {
-        void processDisappeared(ViewHolder var1, @NonNull ItemHolderInfo var2, @Nullable ItemHolderInfo var3);
+        void processDisappeared(ViewHolder var1, ItemHolderInfo var2, ItemHolderInfo var3);
 
-        void processAppeared(ViewHolder var1, @Nullable ItemHolderInfo var2, ItemHolderInfo var3);
+        void processAppeared(ViewHolder var1, ItemHolderInfo var2, ItemHolderInfo var3);
 
-        void processPersistent(ViewHolder var1, @NonNull ItemHolderInfo var2, @NonNull ItemHolderInfo var3);
+        void processPersistent(ViewHolder var1, ItemHolderInfo var2, ItemHolderInfo var3);
 
         void unused(ViewHolder var1);
     }

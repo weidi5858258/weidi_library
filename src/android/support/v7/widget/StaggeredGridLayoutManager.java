@@ -10,28 +10,23 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.os.Parcelable.Creator;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.RestrictTo.Scope;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.RecyclerView.Recycler;
-import android.support.v7.widget.RecyclerView.State;
-import android.support.v7.widget.RecyclerView.LayoutManager.LayoutPrefetchRegistry;
-import android.support.v7.widget.RecyclerView.LayoutManager.Properties;
 import android.support.v7.widget.RecyclerView.SmoothScroller.ScrollVectorProvider;
+import android.support.v7.widget.RecyclerView.State;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.View.MeasureSpec;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.accessibility.AccessibilityEvent;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+
+import androidx.annotation.RestrictTo;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 public class StaggeredGridLayoutManager extends LayoutManager implements ScrollVectorProvider {
     private static final String TAG = "StaggeredGridLManager";
@@ -47,13 +42,13 @@ public class StaggeredGridLayoutManager extends LayoutManager implements ScrollV
     private static final float MAX_SCROLL_FACTOR = 0.33333334F;
     private int mSpanCount = -1;
     StaggeredGridLayoutManager.Span[] mSpans;
-    @NonNull
+
     OrientationHelper mPrimaryOrientation;
-    @NonNull
+
     OrientationHelper mSecondaryOrientation;
     private int mOrientation;
     private int mSizePerSpan;
-    @NonNull
+
     private final LayoutState mLayoutState;
     boolean mReverseLayout = false;
     boolean mShouldReverseLayout = false;
@@ -871,9 +866,9 @@ public class StaggeredGridLayoutManager extends LayoutManager implements ScrollV
         } else {
             StaggeredGridLayoutManager.LayoutParams sglp = (StaggeredGridLayoutManager.LayoutParams)lp;
             if (this.mOrientation == 0) {
-                info.setCollectionItemInfo(CollectionItemInfoCompat.obtain(sglp.getSpanIndex(), sglp.mFullSpan ? this.mSpanCount : 1, -1, -1, sglp.mFullSpan, false));
+                info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(sglp.getSpanIndex(), sglp.mFullSpan ? this.mSpanCount : 1, -1, -1, sglp.mFullSpan, false));
             } else {
-                info.setCollectionItemInfo(CollectionItemInfoCompat.obtain(-1, -1, sglp.getSpanIndex(), sglp.mFullSpan ? this.mSpanCount : 1, sglp.mFullSpan, false));
+                info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(-1, -1, sglp.getSpanIndex(), sglp.mFullSpan ? this.mSpanCount : 1, sglp.mFullSpan, false));
             }
 
         }
@@ -1624,7 +1619,7 @@ public class StaggeredGridLayoutManager extends LayoutManager implements ScrollV
         this.requestLayout();
     }
 
-    @RestrictTo({Scope.LIBRARY})
+    @RestrictTo({RestrictTo.Scope.LIBRARY})
     public void collectAdjacentPrefetchPositions(int dx, int dy, State state, LayoutPrefetchRegistry layoutPrefetchRegistry) {
         int delta = this.mOrientation == 0 ? dx : dy;
         if (this.getChildCount() != 0 && delta != 0) {
@@ -1753,7 +1748,7 @@ public class StaggeredGridLayoutManager extends LayoutManager implements ScrollV
         return this.mOrientation;
     }
 
-    @Nullable
+
     public View onFocusSearchFailed(View focused, int direction, Recycler recycler, State state) {
         if (this.getChildCount() == 0) {
             return null;
@@ -1928,7 +1923,7 @@ public class StaggeredGridLayoutManager extends LayoutManager implements ScrollV
         }
     }
 
-    @RestrictTo({Scope.LIBRARY_GROUP})
+    @RestrictTo({RestrictTo.Scope.LIBRARY_GROUP})
     public static class SavedState implements Parcelable {
         int mAnchorPosition;
         int mVisibleAnchorPosition;

@@ -5,8 +5,8 @@
 
 package android.support.v7.util;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,11 +29,11 @@ public class SortedList<T> {
     private int mSize;
     private final Class<T> mTClass;
 
-    public SortedList(@NonNull Class<T> klass, @NonNull SortedList.Callback<T> callback) {
+    public SortedList(Class<T> klass, SortedList.Callback<T> callback) {
         this(klass, callback, 10);
     }
 
-    public SortedList(@NonNull Class<T> klass, @NonNull SortedList.Callback<T> callback, int initialCapacity) {
+    public SortedList(Class<T> klass, SortedList.Callback<T> callback, int initialCapacity) {
         this.mTClass = klass;
         this.mData = (T[])(Array.newInstance(klass, initialCapacity));
         this.mCallback = callback;
@@ -49,7 +49,7 @@ public class SortedList<T> {
         return this.add(item, true);
     }
 
-    public void addAll(@NonNull T[] items, boolean mayModifyInput) {
+    public void addAll(T[] items, boolean mayModifyInput) {
         this.throwIfInMutationOperation();
         if(items.length != 0) {
             if(mayModifyInput) {
@@ -61,16 +61,16 @@ public class SortedList<T> {
         }
     }
 
-    public void addAll(@NonNull T... items) {
+    public void addAll(T... items) {
         this.addAll(items, false);
     }
 
-    public void addAll(@NonNull Collection<T> items) {
+    public void addAll(Collection<T> items) {
         T[] copy = (T[])(Array.newInstance(this.mTClass, items.size()));
         this.addAll(items.toArray(copy), true);
     }
 
-    public void replaceAll(@NonNull T[] items, boolean mayModifyInput) {
+    public void replaceAll(T[] items, boolean mayModifyInput) {
         this.throwIfInMutationOperation();
         if(mayModifyInput) {
             this.replaceAllInternal(items);
@@ -80,11 +80,11 @@ public class SortedList<T> {
 
     }
 
-    public void replaceAll(@NonNull T... items) {
+    public void replaceAll(T... items) {
         this.replaceAll(items, false);
     }
 
-    public void replaceAll(@NonNull Collection<T> items) {
+    public void replaceAll(Collection<T> items) {
         T[] copy = (T[])(Array.newInstance(this.mTClass, items.size()));
         this.replaceAll(items.toArray(copy), true);
     }
@@ -103,7 +103,7 @@ public class SortedList<T> {
         }
     }
 
-    private void replaceAllInternal(@NonNull T[] newData) {
+    private void replaceAllInternal(T[] newData) {
         boolean forceBatchedUpdates = !(this.mCallback instanceof SortedList.BatchedCallback);
         if(forceBatchedUpdates) {
             this.beginBatchedUpdates();
@@ -175,7 +175,7 @@ public class SortedList<T> {
         this.mCallback.onRemoved(this.mNewDataStart, 1);
     }
 
-    private int sortAndDedup(@NonNull T[] items) {
+    private int sortAndDedup(T[] items) {
         if(items.length == 0) {
             return 0;
         } else {
@@ -564,7 +564,7 @@ public class SortedList<T> {
             return this.mWrappedCallback.areItemsTheSame(item1, item2);
         }
 
-        @Nullable
+
         public Object getChangePayload(T2 item1, T2 item2) {
             return this.mWrappedCallback.getChangePayload(item1, item2);
         }
@@ -590,7 +590,7 @@ public class SortedList<T> {
 
         public abstract boolean areItemsTheSame(T2 var1, T2 var2);
 
-        @Nullable
+
         public Object getChangePayload(T2 item1, T2 item2) {
             return null;
         }

@@ -7,8 +7,8 @@ package android.support.v7.widget;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat;
 import android.support.v7.widget.LinearLayoutManager.AnchorInfo;
 import android.support.v7.widget.LinearLayoutManager.LayoutChunkResult;
 import android.support.v7.widget.LinearLayoutManager.LayoutState;

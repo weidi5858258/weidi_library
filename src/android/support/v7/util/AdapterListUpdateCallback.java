@@ -5,15 +5,13 @@
 
 package android.support.v7.util;
 
-import android.support.annotation.NonNull;
-import android.support.v7.util.ListUpdateCallback;
 import android.support.v7.widget.RecyclerView.Adapter;
 
 public final class AdapterListUpdateCallback implements ListUpdateCallback {
-    @NonNull
+
     private final Adapter mAdapter;
 
-    public AdapterListUpdateCallback(@NonNull Adapter adapter) {
+    public AdapterListUpdateCallback(Adapter adapter) {
         this.mAdapter = adapter;
     }
 

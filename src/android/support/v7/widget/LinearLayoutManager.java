@@ -9,18 +9,12 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.os.Parcelable.Creator;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.RestrictTo.Scope;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.RecyclerView.LayoutParams;
 import android.support.v7.widget.RecyclerView.Recycler;
+import android.support.v7.widget.RecyclerView.SmoothScroller.ScrollVectorProvider;
 import android.support.v7.widget.RecyclerView.State;
 import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.support.v7.widget.RecyclerView.LayoutManager.LayoutPrefetchRegistry;
-import android.support.v7.widget.RecyclerView.LayoutManager.Properties;
-import android.support.v7.widget.RecyclerView.SmoothScroller.ScrollVectorProvider;
 import android.support.v7.widget.helper.ItemTouchHelper.ViewDropHandler;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -31,6 +25,8 @@ import android.view.accessibility.AccessibilityEvent;
 import com.weidi.log.MLog;
 
 import java.util.List;
+
+import androidx.annotation.RestrictTo;
 
 public class LinearLayoutManager
         extends LayoutManager
@@ -1334,8 +1330,8 @@ public class LinearLayoutManager
         return this.mPendingSavedState == null && this.mLastStackFromEnd == this.mStackFromEnd;
     }
 
-    @RestrictTo({Scope.LIBRARY_GROUP})
-    public void prepareForDrop(@NonNull View view, @NonNull View target, int x, int y) {
+    @RestrictTo({RestrictTo.Scope.LIBRARY_GROUP})
+    public void prepareForDrop(View view, View target, int x, int y) {
         this.assertNotInLayoutOrScroll("Cannot drop a view during a scroll or layout calculation");
         this.ensureLayoutState();
         this.resolveShouldLayoutReverse();
@@ -1463,7 +1459,7 @@ public class LinearLayoutManager
         }
     }
 
-    @RestrictTo({Scope.LIBRARY_GROUP})
+    @RestrictTo({RestrictTo.Scope.LIBRARY_GROUP})
     public static class SavedState implements Parcelable {
         int mAnchorPosition;
         int mAnchorOffset;

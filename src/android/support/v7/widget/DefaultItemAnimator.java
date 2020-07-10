@@ -10,8 +10,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.animation.Animator.AnimatorListener;
-import android.support.annotation.NonNull;
-import android.support.v4.view.ViewCompat;
+
+import androidx.core.view.ViewCompat;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
@@ -582,7 +582,7 @@ public class DefaultItemAnimator extends SimpleItemAnimator {
 
     }
 
-    public boolean canReuseUpdatedViewHolder(@NonNull ViewHolder viewHolder, @NonNull List<Object> payloads) {
+    public boolean canReuseUpdatedViewHolder(ViewHolder viewHolder, List<Object> payloads) {
         return !payloads.isEmpty() || super.canReuseUpdatedViewHolder(viewHolder, payloads);
     }
 

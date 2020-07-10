@@ -5,8 +5,8 @@
 
 package android.support.v7.widget;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+
 import android.support.v7.widget.RecyclerView.Adapter;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.RecyclerView.OnFlingListener;
@@ -62,7 +62,7 @@ public abstract class SnapHelper extends OnFlingListener {
         }
     }
 
-    public void attachToRecyclerView(@Nullable RecyclerView recyclerView) throws IllegalStateException {
+    public void attachToRecyclerView(RecyclerView recyclerView) throws IllegalStateException {
         if (this.mRecyclerView != recyclerView) {
             if (this.mRecyclerView != null) {
                 this.destroyCallbacks();
@@ -100,7 +100,7 @@ public abstract class SnapHelper extends OnFlingListener {
         return outDist;
     }
 
-    private boolean snapFromFling(@NonNull LayoutManager layoutManager, int velocityX, int velocityY) {
+    private boolean snapFromFling(LayoutManager layoutManager, int velocityX, int velocityY) {
         if (!(layoutManager instanceof ScrollVectorProvider)) {
             return false;
         } else {
@@ -136,14 +136,14 @@ public abstract class SnapHelper extends OnFlingListener {
         }
     }
 
-    @Nullable
+
     protected SmoothScroller createScroller(LayoutManager layoutManager) {
         return this.createSnapScroller(layoutManager);
     }
 
     /** @deprecated */
     @Deprecated
-    @Nullable
+
     protected LinearSmoothScroller createSnapScroller(LayoutManager layoutManager) {
         return !(layoutManager instanceof ScrollVectorProvider) ? null : new LinearSmoothScroller(this.mRecyclerView.getContext()) {
             protected void onTargetFound(View targetView, State state, Action action) {
@@ -165,10 +165,10 @@ public abstract class SnapHelper extends OnFlingListener {
         };
     }
 
-    @Nullable
-    public abstract int[] calculateDistanceToFinalSnap(@NonNull LayoutManager var1, @NonNull View var2);
 
-    @Nullable
+    public abstract int[] calculateDistanceToFinalSnap(LayoutManager var1, View var2);
+
+
     public abstract View findSnapView(LayoutManager var1);
 
     public abstract int findTargetSnapPosition(LayoutManager var1, int var2, int var3);

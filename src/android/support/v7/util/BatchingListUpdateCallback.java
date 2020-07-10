@@ -5,8 +5,6 @@
 
 package android.support.v7.util;
 
-import android.support.annotation.NonNull;
-
 public class BatchingListUpdateCallback implements ListUpdateCallback {
     private static final int TYPE_NONE = 0;
     private static final int TYPE_ADD = 1;
@@ -18,7 +16,7 @@ public class BatchingListUpdateCallback implements ListUpdateCallback {
     int mLastEventCount = -1;
     Object mLastEventPayload = null;
 
-    public BatchingListUpdateCallback(@NonNull ListUpdateCallback callback) {
+    public BatchingListUpdateCallback(ListUpdateCallback callback) {
         this.mWrapped = callback;
     }
 

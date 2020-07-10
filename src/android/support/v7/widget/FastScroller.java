@@ -12,10 +12,11 @@ import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.view.ViewCompat;
+
+
+import androidx.annotation.VisibleForTesting;
+import androidx.core.view.ViewCompat;
+//import androidx.core.view.ViewCompat;
 import android.support.v7.widget.RecyclerView.ItemDecoration;
 import android.support.v7.widget.RecyclerView.OnItemTouchListener;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
@@ -103,7 +104,7 @@ class FastScroller extends ItemDecoration implements OnItemTouchListener {
         this.attachToRecyclerView(recyclerView);
     }
 
-    public void attachToRecyclerView(@Nullable RecyclerView recyclerView) {
+    public void attachToRecyclerView(RecyclerView recyclerView) {
         if (this.mRecyclerView != recyclerView) {
             if (this.mRecyclerView != null) {
                 this.destroyCallbacks();
@@ -303,7 +304,7 @@ class FastScroller extends ItemDecoration implements OnItemTouchListener {
         }
     }
 
-    public boolean onInterceptTouchEvent(@NonNull RecyclerView recyclerView, @NonNull MotionEvent ev) {
+    public boolean onInterceptTouchEvent(RecyclerView recyclerView, MotionEvent ev) {
         boolean handled;
         if (this.mState == 1) {
             boolean insideVerticalThumb = this.isPointInsideVerticalThumb(ev.getX(), ev.getY());
@@ -331,7 +332,7 @@ class FastScroller extends ItemDecoration implements OnItemTouchListener {
         return handled;
     }
 
-    public void onTouchEvent(@NonNull RecyclerView recyclerView, @NonNull MotionEvent me) {
+    public void onTouchEvent(RecyclerView recyclerView, MotionEvent me) {
         if (this.mState != 0) {
             if (me.getAction() == 0) {
                 boolean insideVerticalThumb = this.isPointInsideVerticalThumb(me.getX(), me.getY());

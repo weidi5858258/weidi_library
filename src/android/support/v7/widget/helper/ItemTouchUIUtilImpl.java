@@ -7,7 +7,7 @@ package android.support.v7.widget.helper;
 
 import android.graphics.Canvas;
 import android.os.Build.VERSION;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.ViewCompat;
 //import android.support.v7.recyclerview.R.id;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;

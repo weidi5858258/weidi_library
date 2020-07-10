@@ -5,8 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.annotation.FloatRange;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.method.MovementMethod;
 import android.util.SparseArray;
@@ -20,6 +18,9 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.weidi.customadapter.interfaces.IViewSetter;
+
+import androidx.annotation.FloatRange;
+import androidx.core.view.ViewCompat;
 
 /***
 

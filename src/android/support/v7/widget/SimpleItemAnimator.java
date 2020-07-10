@@ -5,8 +5,8 @@
 
 package android.support.v7.widget;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+
 import android.support.v7.widget.RecyclerView.ItemAnimator;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.RecyclerView.ItemAnimator.ItemHolderInfo;
@@ -28,11 +28,11 @@ public abstract class SimpleItemAnimator extends ItemAnimator {
         this.mSupportsChangeAnimations = supportsChangeAnimations;
     }
 
-    public boolean canReuseUpdatedViewHolder(@NonNull ViewHolder viewHolder) {
+    public boolean canReuseUpdatedViewHolder(ViewHolder viewHolder) {
         return !this.mSupportsChangeAnimations || viewHolder.isInvalid();
     }
 
-    public boolean animateDisappearance(@NonNull ViewHolder viewHolder, @NonNull ItemHolderInfo preLayoutInfo, @Nullable ItemHolderInfo postLayoutInfo) {
+    public boolean animateDisappearance(ViewHolder viewHolder, ItemHolderInfo preLayoutInfo, ItemHolderInfo postLayoutInfo) {
         int oldLeft = preLayoutInfo.left;
         int oldTop = preLayoutInfo.top;
         View disappearingItemView = viewHolder.itemView;
@@ -46,11 +46,11 @@ public abstract class SimpleItemAnimator extends ItemAnimator {
         }
     }
 
-    public boolean animateAppearance(@NonNull ViewHolder viewHolder, @Nullable ItemHolderInfo preLayoutInfo, @NonNull ItemHolderInfo postLayoutInfo) {
+    public boolean animateAppearance(ViewHolder viewHolder, ItemHolderInfo preLayoutInfo, ItemHolderInfo postLayoutInfo) {
         return preLayoutInfo == null || preLayoutInfo.left == postLayoutInfo.left && preLayoutInfo.top == postLayoutInfo.top ? this.animateAdd(viewHolder) : this.animateMove(viewHolder, preLayoutInfo.left, preLayoutInfo.top, postLayoutInfo.left, postLayoutInfo.top);
     }
 
-    public boolean animatePersistence(@NonNull ViewHolder viewHolder, @NonNull ItemHolderInfo preInfo, @NonNull ItemHolderInfo postInfo) {
+    public boolean animatePersistence(ViewHolder viewHolder, ItemHolderInfo preInfo, ItemHolderInfo postInfo) {
         if (preInfo.left == postInfo.left && preInfo.top == postInfo.top) {
             this.dispatchMoveFinished(viewHolder);
             return false;
@@ -59,7 +59,7 @@ public abstract class SimpleItemAnimator extends ItemAnimator {
         }
     }
 
-    public boolean animateChange(@NonNull ViewHolder oldHolder, @NonNull ViewHolder newHolder, @NonNull ItemHolderInfo preInfo, @NonNull ItemHolderInfo postInfo) {
+    public boolean animateChange(ViewHolder oldHolder, ViewHolder newHolder, ItemHolderInfo preInfo, ItemHolderInfo postInfo) {
         int fromLeft = preInfo.left;
         int fromTop = preInfo.top;
         int toLeft;

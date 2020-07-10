@@ -2,8 +2,7 @@ package com.weidi.customadapter;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.Nullable;
+
 import android.support.v7.util.DiffUtil;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +14,8 @@ import com.weidi.customadapter.interfaces.DefaultDiffCallback;
 import com.weidi.customadapter.interfaces.IMultiItemViewType;
 
 import java.util.List;
+
+import androidx.annotation.LayoutRes;
 
 /***
  构造器必须要调用一下父类
@@ -73,7 +74,7 @@ public abstract class CustomRecyclerViewAdapter<T> extends RecyclerViewAdapter<T
      * @return
      */
     @Override
-    public CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType) {
+    public CustomViewHolder onCreate(View convertView, ViewGroup parent, int viewType) {
         @LayoutRes int resource;
         if (mMultiItemViewType != null) {
             // 根据不同的类型得到不同的而已
