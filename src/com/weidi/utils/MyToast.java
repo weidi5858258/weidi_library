@@ -62,7 +62,7 @@ public class MyToast {
                     if (mContext == null) {
                         throw new NullPointerException("MyToast mContext is null.");
                     }
-                    mToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
+                    mToast = Toast.makeText(mContext, "", Toast.LENGTH_LONG);
                     mToast.setGravity(
                             //Gravity.CENTER_HORIZONTAL | Gravity.TOP,
                             Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM,
