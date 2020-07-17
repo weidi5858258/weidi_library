@@ -4,5 +4,6 @@
 .git_push_impl.sh
 /build
 build
+buildout
 /weidi_library.iml
 weidi_library.iml
