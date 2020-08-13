@@ -142,6 +142,7 @@ public class MyToast {
             msg.what = MSG_SHOW_TEXT;
             msg.obj = text;
             // 两条消息之间的显示间隔时间最好大于5ms,比如6ms
+            // 如果两条消息显示间隔时间大于8秒,那么这些消息才能显示
             mUiHandler.sendMessageDelayed(msg, 8);
         }
 
@@ -176,6 +177,7 @@ public class MyToast {
     private static View mView;
     private static TextView mTextView;
 
+    // 需要动态申请权限的
     private static synchronized void addView() {
         if (mContext == null || mIsAddedView) {
             return;
@@ -189,23 +191,21 @@ public class MyToast {
 
         mWindowManager =
                 (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        mWindowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
-        int screenWidth = displayMetrics.widthPixels;// 1080
-
         mLayoutParams = new WindowManager.LayoutParams();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mLayoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
         } else {
             mLayoutParams.type = WindowManager.LayoutParams.TYPE_PHONE;
         }
-        mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        mLayoutParams.format = PixelFormat.RGBA_8888;
+        mLayoutParams.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        // 下面两个的作用都是使弹出窗口的背景透明(本来是黑色的)
+        // mLayoutParams.format = PixelFormat.RGBA_8888;
+        mLayoutParams.format = PixelFormat.TRANSLUCENT;
         mLayoutParams.gravity = Gravity.CENTER_HORIZONTAL + Gravity.TOP;
-        mLayoutParams.width = screenWidth;
+        mLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         mLayoutParams.height = 100;
-        mLayoutParams.x = 0;
-        mLayoutParams.y = 0;
         mWindowManager.addView(mView, mLayoutParams);
     }
 
