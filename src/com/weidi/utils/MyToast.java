@@ -1,12 +1,21 @@
 package com.weidi.utils;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.weidi.library.R;
 
 /**
  * Created by root on 17-2-23.
@@ -14,22 +23,43 @@ import android.widget.Toast;
 
 public class MyToast {
 
-    private volatile static Toast mToast;
+    private static final String TAG = MyToast.class.getSimpleName();
+    private volatile static Toast sToast;
     private static Context mContext;
     private static final int MSG_SHOW_TEXT = 1;
+    private static final int MSG_REMOVE_VIEW = 2;
 
-    private static Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private static Handler mUiHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
+
+            switch (msg.what) {
+                case MSG_SHOW_TEXT:
+                    if (!mIsAddedView) {
+                        addView();
+                    }
+                    if (mTextView != null) {
+                        mTextView.setText((String) msg.obj);
+
+                        mUiHandler.removeMessages(MSG_REMOVE_VIEW);
+                        mUiHandler.sendEmptyMessageDelayed(MSG_REMOVE_VIEW, 1000);
+                    }
+                    break;
+                case MSG_REMOVE_VIEW:
+                    removeView();
+                    break;
+                default:
+                    break;
+            }
             // 不要直接使用getInstance().cancel();
             //mHandler.removeCallbacks(runnable);
-            getInstance().setText((String) msg.obj);
-            if (msg.arg1 == 0) {
+            /*getInstance().setText((String) msg.obj);
+            if (msg.arg1 == Toast.LENGTH_SHORT) {
                 getInstance().setDuration(Toast.LENGTH_SHORT);
             } else {
                 getInstance().setDuration(Toast.LENGTH_LONG);
             }
-            getInstance().show();
+            getInstance().show();*/
             //mHandler.postDelayed(runnable, 5000);
         }
     };
@@ -56,14 +86,14 @@ public class MyToast {
      * @return
      */
     public static Toast getInstance() {
-        if (mToast == null) {
+        if (sToast == null) {
             synchronized (MyToast.class) {
-                if (mToast == null) {
+                if (sToast == null) {
                     if (mContext == null) {
                         throw new NullPointerException("MyToast mContext is null.");
                     }
-                    mToast = Toast.makeText(mContext, "", Toast.LENGTH_LONG);
-                    mToast.setGravity(
+                    sToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
+                    sToast.setGravity(
                             //Gravity.CENTER_HORIZONTAL | Gravity.TOP,
                             Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM,
                             0,
@@ -71,16 +101,17 @@ public class MyToast {
                 }
             }
         }
-        return mToast;
+
+        return sToast;
     }
 
     public static void show(String text) {
-        show(text, 0);
+        show(text, Toast.LENGTH_SHORT);
     }
 
     public static void show(int strId) {
         if (mContext != null) {
-            show(mContext.getString(strId), 0);
+            show(mContext.getString(strId), Toast.LENGTH_SHORT);
         }
     }
 
@@ -94,29 +125,95 @@ public class MyToast {
         if (TextUtils.isEmpty(text)) {
             return;
         }
+
         if (Looper.getMainLooper() == Looper.myLooper()) {
+            if (!mIsAddedView) {
+                addView();
+            }
+            if (mTextView != null) {
+                mTextView.setText(text);
+
+                mUiHandler.removeMessages(MSG_REMOVE_VIEW);
+                mUiHandler.sendEmptyMessageDelayed(MSG_REMOVE_VIEW, 1000);
+            }
+        } else {
+            mUiHandler.removeMessages(MSG_SHOW_TEXT);
+            Message msg = mUiHandler.obtainMessage();
+            msg.what = MSG_SHOW_TEXT;
+            msg.obj = text;
+            // 两条消息之间的显示间隔时间最好大于5ms,比如6ms
+            mUiHandler.sendMessageDelayed(msg, 8);
+        }
+
+        /*if (Looper.getMainLooper() == Looper.myLooper()) {
             getInstance().setText(text);
-            if (duration == 0) {
+            if (duration == Toast.LENGTH_SHORT) {
                 getInstance().setDuration(Toast.LENGTH_SHORT);
             } else {
                 getInstance().setDuration(Toast.LENGTH_LONG);
             }
             getInstance().show();
         } else {
-            mHandler.removeMessages(MSG_SHOW_TEXT);
-            Message msg = mHandler.obtainMessage();
+            mUiHandler.removeMessages(MSG_SHOW_TEXT);
+            Message msg = mUiHandler.obtainMessage();
             msg.what = MSG_SHOW_TEXT;
             msg.obj = text;
             msg.arg1 = duration;
             // 两条消息之间的显示间隔时间最好大于5ms,比如6ms
-            mHandler.sendMessageDelayed(msg, 5);
-        }
-
-
+            mUiHandler.sendMessageDelayed(msg, 50);
+        }*/
     }
 
     public static void dismiss() {
         getInstance().cancel();
+    }
+
+    //////////////////////////////////////////////////////////////////////
+
+    private static boolean mIsAddedView = false;
+    private static WindowManager mWindowManager;
+    private static WindowManager.LayoutParams mLayoutParams;
+    private static View mView;
+    private static TextView mTextView;
+
+    private static synchronized void addView() {
+        if (mContext == null || mIsAddedView) {
+            return;
+        }
+
+        mIsAddedView = true;
+        LayoutInflater inflate = (LayoutInflater)
+                mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mView = inflate.inflate(R.layout.transient_notification, null);
+        mTextView = (TextView) mView.findViewById(R.id.message);
+
+        mWindowManager =
+                (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        mWindowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;// 1080
+
+        mLayoutParams = new WindowManager.LayoutParams();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mLayoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            mLayoutParams.type = WindowManager.LayoutParams.TYPE_PHONE;
+        }
+        mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        mLayoutParams.format = PixelFormat.RGBA_8888;
+        mLayoutParams.gravity = Gravity.CENTER_HORIZONTAL + Gravity.TOP;
+        mLayoutParams.width = screenWidth;
+        mLayoutParams.height = 100;
+        mLayoutParams.x = 0;
+        mLayoutParams.y = 0;
+        mWindowManager.addView(mView, mLayoutParams);
+    }
+
+    private static synchronized void removeView() {
+        if (mIsAddedView && mView != null) {
+            mWindowManager.removeView(mView);
+            mIsAddedView = false;
+        }
     }
 
 }
