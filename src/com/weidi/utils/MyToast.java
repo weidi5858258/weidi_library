@@ -1,6 +1,8 @@
 package com.weidi.utils;
 
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
@@ -183,6 +185,10 @@ public class MyToast {
             return;
         }
 
+        UiModeManager uiModeManager =
+                (UiModeManager) mContext.getSystemService(Context.UI_MODE_SERVICE);
+        int whatIsDevice = uiModeManager.getCurrentModeType();
+
         mIsAddedView = true;
         LayoutInflater inflate = (LayoutInflater)
                 mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -205,7 +211,11 @@ public class MyToast {
         mLayoutParams.format = PixelFormat.TRANSLUCENT;
         mLayoutParams.gravity = Gravity.CENTER_HORIZONTAL + Gravity.TOP;
         mLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-        mLayoutParams.height = 100;
+        if (whatIsDevice != Configuration.UI_MODE_TYPE_WATCH) {
+            mLayoutParams.height = 80;
+        } else {
+            mLayoutParams.height = 60;
+        }
         mWindowManager.addView(mView, mLayoutParams);
     }
 

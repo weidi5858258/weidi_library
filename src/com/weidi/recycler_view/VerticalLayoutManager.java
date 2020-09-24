@@ -275,7 +275,7 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 itemViewRect = new Rect();
             }
             // 每个item的坐标点
-            itemViewRect.set(120, heightOffset, mItemWidth - 120, heightOffset + mItemHeight);
+            itemViewRect.set(10, heightOffset, mItemWidth - 10, heightOffset + mItemHeight);
             mAllItemsRect.put(i, itemViewRect);
             layoutDecorated(itemView,
                     itemViewRect.left, itemViewRect.top, itemViewRect.right, itemViewRect.bottom);
