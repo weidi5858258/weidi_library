@@ -21,6 +21,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="0dp"
     android:orientation="vertical"
     android:background="@color/beige">
 
@@ -28,10 +29,9 @@
         android:id="@+id/message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:padding="0dp"
         android:maxLines="1"
         android:gravity="center"
-        android:layout_gravity="center_horizontal"
         android:textAppearance="@style/TextAppearance.Toast"
         android:textColor="@color/lightsalmon"/>
 

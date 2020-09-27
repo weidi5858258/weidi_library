@@ -210,11 +210,13 @@ public class MyToast {
         // mLayoutParams.format = PixelFormat.RGBA_8888;
         mLayoutParams.format = PixelFormat.TRANSLUCENT;
         mLayoutParams.gravity = Gravity.CENTER_HORIZONTAL + Gravity.TOP;
-        mLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         if (whatIsDevice != Configuration.UI_MODE_TYPE_WATCH) {
+            //mLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+            mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
             mLayoutParams.height = 80;
         } else {
-            mLayoutParams.height = 60;
+            mLayoutParams.width = 250;
+            mLayoutParams.height = 50;
         }
         mWindowManager.addView(mView, mLayoutParams);
     }
