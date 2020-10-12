@@ -310,7 +310,7 @@ public class VerticalLayoutManager extends LinearLayoutManager {
                 " mAllItemsTotalHeight: " + mAllItemsTotalHeight +
                 " mRvUsableHeight: " + mRvUsableHeight +
                 " mAllowScrollVerticallyOffset: " + mAllowScrollVerticallyOffset +
-                " getPaddingStart: " + getPaddingStart() +
+                "\n getPaddingStart: " + getPaddingStart() +
                 " getPaddingEnd: " + getPaddingEnd() +
                 " getPaddingLeft: " + getPaddingLeft() +
                 " getPaddingTop: " + getPaddingTop() +
