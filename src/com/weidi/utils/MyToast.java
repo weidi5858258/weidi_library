@@ -215,7 +215,8 @@ public class MyToast {
             mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
             mLayoutParams.height = 80;
         } else {
-            mLayoutParams.width = 250;
+            //mLayoutParams.width = 250;
+            mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
             mLayoutParams.height = 50;
         }
         mWindowManager.addView(mView, mLayoutParams);

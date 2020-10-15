@@ -7,10 +7,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.RequiresApi;
 
 /***
  首先:
@@ -66,7 +69,8 @@ public class PermissionsUtils {
 
             android.Manifest.permission.READ_PHONE_STATE,
             android.Manifest.permission.READ_SMS,
-            android.Manifest.permission.READ_PHONE_NUMBERS,
+            // 申请不了的
+            // android.Manifest.permission.READ_PHONE_NUMBERS,
 
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -80,6 +84,7 @@ public class PermissionsUtils {
         void onRequestPermissionsResult();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public static void checkAndRequestPermission(
             IRequestPermissionsResult requestPermissionsResult) {
         RequestPermissions.getInstance().checkAndRequestPermission(requestPermissionsResult);
@@ -118,6 +123,7 @@ public class PermissionsUtils {
             return sRequestPermissions;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         public void checkAndRequestPermission(
                 IRequestPermissionsResult requestPermissionsResult) {
             if (requestPermissionsResult == null
@@ -236,6 +242,7 @@ public class PermissionsUtils {
             builder.show();
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         private String[] getNeedRequestedPermissions(
                 Activity activity,
                 String[] permissionNames) {
