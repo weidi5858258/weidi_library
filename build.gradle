@@ -78,28 +78,28 @@ android {
 }// android
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    api fileTree(include: ['*.jar'], dir: 'libs')
 
-    compile files('libs/zxing.jar')
-    compile files('libs/services.jar')
-    compile files('libs/fastjson-1.2.35.jar')
+    api files('libs/zxing.jar')
+    api files('libs/services.jar')
+    api files('libs/fastjson-1.2.35.jar')
 
-    compile 'com.google.code.gson:gson:2.2.4'
-    compile 'com.nineoldandroids:library:2.4.0'
+    api 'com.google.code.gson:gson:2.2.4'
+    api 'com.nineoldandroids:library:2.4.0'
 
-    compile 'com.android.support:support-v4:28.0.0'
-    compile 'com.android.support:support-v13:28.0.0'
-    compile 'com.android.support:appcompat-v7:28.0.0'
-    compile 'com.android.support:gridlayout-v7:28.0.0'
-    compile 'com.android.support:cardview-v7:28.0.0'
+    api 'com.android.support:support-v4:28.0.0'
+    api 'com.android.support:support-v13:28.0.0'
+    api 'com.android.support:appcompat-v7:28.0.0'
+    api 'com.android.support:gridlayout-v7:28.0.0'
+    api 'com.android.support:cardview-v7:28.0.0'
 //    compile 'com.android.support:recyclerview-v7:28.0.0'
 
 //    implementation 'androidx.appcompat:appcompat:1.1.0'
 
-    api 'com.android.support.constraint:constraint-layout:1.1.3'
+    api 'com.android.support.constraint:constraint-layout:2.0.1'
 //    api 'androidx.constraintlayout:constraintlayout:1.1.3'
 
-    compile 'com.android.support:support-annotations:28.0.0'
+    api 'com.android.support:support-annotations:28.0.0'
 //    implementation 'androidx.annotation:annotation:1.1.0'
 }// dependencies implementation
 
