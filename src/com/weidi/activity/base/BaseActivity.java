@@ -159,7 +159,7 @@ public abstract class BaseActivity
             if (key.equals(fragmentName)) {
                 int type = sFragmentBackTypeSMap.get(key);
                 EventBusUtils.post(
-                        FragOperManager.class,
+                        FragOperManager.class.getName(),
                         type,
                         new Object[]{this, mBaseFragment});
                 break;
