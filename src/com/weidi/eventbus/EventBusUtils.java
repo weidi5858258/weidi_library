@@ -318,8 +318,8 @@ class EventBus {
             return;
         }
 
-        Log.i(TAG, "register() before: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
-        Log.i(TAG, "register() before: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+        Log.i(TAG, "register()   before: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+        Log.i(TAG, "register()   before: mStringObjectMap.size(): " + (mStringObjectMap.size()));
 
         // 防止相同类的不同对象被保存进去
         String name = clazz.getName();// 类的全路径名
@@ -348,8 +348,13 @@ class EventBus {
         mStringObjectMap.put(name, reference);
         mObjectMethodMap.put(reference, method);
 
-        Log.i(TAG, "register() after : mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
-        Log.i(TAG, "register() after : mStringObjectMap.size(): " + (mStringObjectMap.size()));
+        Log.i(TAG, "register()    after: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+        Log.i(TAG, "register()    after: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+        iter2 = mStringObjectMap.entrySet().iterator();
+        while (iter2.hasNext()) {
+            Map.Entry<String, WeakReference<Object>> entry = (Map.Entry) iter2.next();
+            Log.i(TAG, "register()     name: " + (entry.getKey()));
+        }
     }
 
     synchronized void unregister(Object object) {
@@ -396,8 +401,8 @@ class EventBus {
             }
         }
 
-        Log.i(TAG, "unregister() after : mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
-        Log.i(TAG, "unregister() after : mStringObjectMap.size(): " + (mStringObjectMap.size()));
+        Log.i(TAG, "unregister()  after: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+        Log.i(TAG, "unregister()  after: mStringObjectMap.size(): " + (mStringObjectMap.size()));
     }
 
     /***
