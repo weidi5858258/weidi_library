@@ -17,27 +17,39 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/***
+/*
  private Object onEvent(int what, Object[] objArray) {
- Object result = null;
- switch (what){
- case 0:{
- break;
+     Object result = null;
+     switch (what) {
+         case 0: {
+            break;
+        }
+         default:
+            break;
+     }
+     return result;
  }
- default:
- break;
- }
- return result;
- }
+
+ 注意点:
+ 1. "String className"中的className必须是类的完整名称,如 "com.weidi.media.wdplayer.MainActivity"
+ 2. 定义"int what"时,最好把这些what放到一个单独的常量类中去,这样可以防止相同的what被不同类使用时移除掉.
+ 3. "Object[] objArray"中的objArray除基本数据类型,String类型,enum类型直接传递外,
+     其他对象最好使用弱引用传递,防止内存泄露(不同组件之间发送消息最好这样使用).
+     比如:
+     new Object[]{
+         new WeakReference<Object>(Activity.this),
+         new WeakReference<Object>(Service.this),
+         new WeakReference<Object>(某个强引用对象),
+         12345,
+         "HelloWorld"
+     }
 
  使用场景:
  1.不同组件之间发送消息(如Activity向Service发送一个消息进行某种操作)
  2.相同组件之间发送消息(如Activity中延时发送消息,就像使用Handler发送消息一样)
- 3.组件内不需要再创建Handler或HandlerThread对象(如Activity内)
+ 3.同一个进程内,不需要在任何地方再创建Handler或HandlerThread对象
 
- 参数:
- String className   必须是类的完整名称,如 "com.weidi.media.wdplayer.MainActivity"
- 方法:(使用的api就只有6个,其他已经被注释起来了,减轻心里负担)
+ 方法:(使用的api就只有12个,其他已经被注释起来了,减轻心里负担)
  post:              代码在原来的线程中(主线程或子线程)执行.
  postDelayed:       想把代码运行在原来线程中,并延时执行.
  postUi:            想把代码运行在主线程中.(一般在子线程中使用)
@@ -127,6 +139,9 @@ public class EventBusUtils {
                               final Object[] objArray) {
         return EventBus.getDefault().post(object, what, objArray);
     }*/
+    public static Object postUi(final Runnable r) {
+        return EventBus.getDefault().postUi(r);
+    }
 
     /***
      调用此方法是在UI线程时能得到结果,否则为null
@@ -149,6 +164,10 @@ public class EventBusUtils {
                                 final Object[] objArray) {
         return EventBus.getDefault().postUi(object, what, objArray);
     }*/
+
+    public static Object postUiDelayed(final Runnable r, long delayMillis) {
+        return EventBus.getDefault().postUiDelayed(r, delayMillis);
+    }
 
     /***
      返回结果为null
@@ -175,6 +194,10 @@ public class EventBusUtils {
         return EventBus.getDefault().postUiDelayed(object, what, delayMillis, objArray);
     }*/
 
+    public static Object postThread(final Runnable r) {
+        return EventBus.getDefault().postThread(r);
+    }
+
     /***
      调用此方法是在Thread线程时能得到结果,否则为null
      使用这个api
@@ -196,6 +219,10 @@ public class EventBusUtils {
                                     final Object[] objArray) {
         return EventBus.getDefault().postThread(object, what, objArray);
     }*/
+
+    public static Object postThreadDelayed(final Runnable r, long delayMillis) {
+        return EventBus.getDefault().postThreadDelayed(r, delayMillis);
+    }
 
     /***
      返回结果为null
@@ -244,7 +271,6 @@ class EventBus {
     private Handler mUiHandler;
 
     private static class InstanceHolder {
-        // 延迟加载实例
         private static EventBus sEventBus = new EventBus();
     }
 
@@ -272,27 +298,17 @@ class EventBus {
 
     //////////////////////////////////////////////////////////////////////////////////////
 
-    /***
-     下面的实现方式是定向型的，效率上面可能会高一些
-     如果某种动作只在特定类里面发生，那么用下面的方式
-     如果有多个类需要做相同的操作，那么用上面的方式
-     1.不需要实现接口
-     2.不同类之间的what相同也不会造成问题，如果用上面的方式就会有问题
-     3.传递的数据都在主线程中执行
-     */
-
     private static final HashMap<Message, Object[]> mThreadMsgMap =
             new HashMap<Message, Object[]>();
     private static final HashMap<Message, Object[]> mUiMsgMap =
             new HashMap<Message, Object[]>();
-    // String保存的是类的全路径名
+    // String保存的是类的全路径名,如"com.weidi.media.wdplayer.MainActivity"
     private static final HashMap<String, WeakReference<Object>> mStringObjectMap =
             new HashMap<String, WeakReference<Object>>();
     private static final HashMap<WeakReference<Object>, Method> mObjectMethodMap =
             new HashMap<WeakReference<Object>, Method>();
     private volatile static Message sUiMessage = null;
     private volatile static Message sThreadMessage = null;
-    private Object mObjResult;
 
     synchronized void register(Object object) {
         if (object == null) {
@@ -447,6 +463,10 @@ class EventBus {
         return dispatchEvent(object, what, objArray);
     }
 
+    Object postUi(final Runnable r) {
+        return mUiHandler.post(r);
+    }
+
     // 使用这个api
     Object postUi(final String className,
                   final int what,
@@ -482,6 +502,13 @@ class EventBus {
                     getUiMsg(object, what), SystemClock.uptimeMillis(), objArray);
             return null;
         }
+    }
+
+    Object postUiDelayed(final Runnable r, long delayMillis) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        return mUiHandler.postDelayed(r, delayMillis);
     }
 
     // 使用这个api
@@ -521,6 +548,10 @@ class EventBus {
         return null;
     }
 
+    Object postThread(final Runnable r) {
+        return mThreadHandler.post(r);
+    }
+
     // 使用这个api
     Object postThread(final String className,
                       final int what,
@@ -556,6 +587,13 @@ class EventBus {
         } else {
             return dispatchEvent(object, what, objArray);
         }
+    }
+
+    Object postThreadDelayed(final Runnable r, long delayMillis) {
+        if (delayMillis < 0) {
+            delayMillis = 0;
+        }
+        return mThreadHandler.postDelayed(r, delayMillis);
     }
 
     // 使用这个api
@@ -596,10 +634,46 @@ class EventBus {
     }
 
     void removeUiMessages(int what) {
+        synchronized (mUiMsgMap) {
+            Iterator<Map.Entry<Message, Object[]>> iter = mUiMsgMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
+                Message msg = entry.getKey();
+                Object[] objects = entry.getValue();
+                if (msg == null || msg.what == what) {
+                    if (objects != null) {
+                        for (Object object : objects) {
+                            object = null;
+                        }
+                        objects = null;
+                    }
+                    msg = null;
+                    iter.remove();
+                }
+            }
+        }
         mUiHandler.removeMessages(what);
     }
 
     void removeThreadMessages(int what) {
+        synchronized (mThreadMsgMap) {
+            Iterator<Map.Entry<Message, Object[]>> iter = mThreadMsgMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
+                Message msg = entry.getKey();
+                Object[] objects = entry.getValue();
+                if (msg == null || msg.what == what) {
+                    if (objects != null) {
+                        for (Object object : objects) {
+                            object = null;
+                        }
+                        objects = null;
+                    }
+                    msg = null;
+                    iter.remove();
+                }
+            }
+        }
         mThreadHandler.removeMessages(what);
     }
 
@@ -826,6 +900,7 @@ class EventBus {
                 }
                 objArray = null;
             }
+            msg = null;
         }
     }
 
@@ -856,6 +931,7 @@ class EventBus {
                 }
                 objArray = null;
             }
+            msg = null;
         }
     }
 
