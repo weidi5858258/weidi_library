@@ -1,5 +1,6 @@
 package com.weidi.eventbus;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -63,7 +64,7 @@ import java.util.Map;
 
 public class EventBusUtils {
 
-    public static abstract class AAsyncResult implements Parcelable {
+    /*public static abstract class AAsyncResult implements Parcelable {
 
         public abstract void onResult(Object object);
 
@@ -76,11 +77,11 @@ public class EventBusUtils {
         public void writeToParcel(Parcel dest, int flags) {
             return;
         }
-    }
+    }*/
 
-    public static void init() {
+    /*public static void init() {
         EventBus.getDefault();
-    }
+    }*/
 
     public static void register(Object object) {
         EventBus.getDefault().register(object);
@@ -99,6 +100,23 @@ public class EventBusUtils {
      */
     public static void onDestroy() {
         EventBus.getDefault().onDestroy();
+    }
+
+    // 在Application中设置
+    public static void setContext(Context context) {
+        EventBus.getDefault().setContext(context);
+    }
+
+    public static Context getContext() {
+        return EventBus.getDefault().getContext();
+    }
+
+    public static Handler getThreadHandler() {
+        return EventBus.getDefault().getThreadHandler();
+    }
+
+    public static Handler getUiHandler() {
+        return EventBus.getDefault().getUiHandler();
     }
 
     /***
@@ -249,6 +267,14 @@ public class EventBusUtils {
         return EventBus.getDefault().postThreadDelayed(object, what, delayMillis, objArray);
     }*/
 
+    public static void removeMessages(int what) {
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            EventBus.getDefault().removeUiMessages(what);
+        } else {
+            EventBus.getDefault().removeThreadMessages(what);
+        }
+    }
+
     public static void removeUiMessages(int what) {
         EventBus.getDefault().removeUiMessages(what);
     }
@@ -269,6 +295,7 @@ class EventBus {
     private HandlerThread mHandlerThread;
     private Handler mThreadHandler;
     private Handler mUiHandler;
+    private Context mContext;
 
     private static class InstanceHolder {
         private static EventBus sEventBus = new EventBus();
@@ -426,14 +453,30 @@ class EventBus {
      */
     void onDestroy() {
         Log.i(TAG, "onDestroy()");
-        if (mHandlerThread != null) {
-            mHandlerThread.quit();
-            mHandlerThread = null;
-        }
         mThreadHandler.removeCallbacksAndMessages(null);
         mUiHandler.removeCallbacksAndMessages(null);
+        if (mHandlerThread != null) {
+            mHandlerThread.quitSafely();
+            mHandlerThread = null;
+        }
         mThreadHandler = null;
         mUiHandler = null;
+    }
+
+    void setContext(Context context) {
+        mContext = context;
+    }
+
+    Context getContext() {
+        return mContext;
+    }
+
+    Handler getThreadHandler() {
+        return mThreadHandler;
+    }
+
+    Handler getUiHandler() {
+        return mUiHandler;
     }
 
     /***
