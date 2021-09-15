@@ -31,6 +31,9 @@ import java.util.Map;
      return result;
  }
 
+ 像postUiDelayed(final Runnable r, long delayMillis)这种延时消息,
+ 在没有执行之前想要移除掉的话,可以使用removeUiMessages(0)进行移除.
+
  注意点:
  1. "String className"中的className必须是类的完整名称,如 "com.weidi.media.wdplayer.MainActivity"
  2. 定义"int what"时,最好把这些what放到一个单独的常量类中去,这样可以防止相同的what被不同类使用时移除掉.
@@ -677,21 +680,23 @@ class EventBus {
     }
 
     void removeUiMessages(int what) {
-        synchronized (mUiMsgMap) {
-            Iterator<Map.Entry<Message, Object[]>> iter = mUiMsgMap.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
-                Message msg = entry.getKey();
-                Object[] objects = entry.getValue();
-                if (msg == null || msg.what == what) {
-                    if (objects != null) {
-                        for (Object object : objects) {
-                            object = null;
+        if (!mUiMsgMap.isEmpty()) {
+            synchronized (mUiMsgMap) {
+                Iterator<Map.Entry<Message, Object[]>> iter = mUiMsgMap.entrySet().iterator();
+                while (iter.hasNext()) {
+                    Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
+                    Message msg = entry.getKey();
+                    Object[] objects = entry.getValue();
+                    if (msg == null || msg.what == what) {
+                        if (objects != null) {
+                            for (Object object : objects) {
+                                object = null;
+                            }
+                            objects = null;
                         }
-                        objects = null;
+                        msg = null;
+                        iter.remove();
                     }
-                    msg = null;
-                    iter.remove();
                 }
             }
         }
@@ -699,21 +704,23 @@ class EventBus {
     }
 
     void removeThreadMessages(int what) {
-        synchronized (mThreadMsgMap) {
-            Iterator<Map.Entry<Message, Object[]>> iter = mThreadMsgMap.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
-                Message msg = entry.getKey();
-                Object[] objects = entry.getValue();
-                if (msg == null || msg.what == what) {
-                    if (objects != null) {
-                        for (Object object : objects) {
-                            object = null;
+        if (!mThreadMsgMap.isEmpty()) {
+            synchronized (mThreadMsgMap) {
+                Iterator<Map.Entry<Message, Object[]>> iter = mThreadMsgMap.entrySet().iterator();
+                while (iter.hasNext()) {
+                    Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
+                    Message msg = entry.getKey();
+                    Object[] objects = entry.getValue();
+                    if (msg == null || msg.what == what) {
+                        if (objects != null) {
+                            for (Object object : objects) {
+                                object = null;
+                            }
+                            objects = null;
                         }
-                        objects = null;
+                        msg = null;
+                        iter.remove();
                     }
-                    msg = null;
-                    iter.remove();
                 }
             }
         }
