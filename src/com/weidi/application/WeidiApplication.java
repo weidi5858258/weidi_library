@@ -38,7 +38,7 @@ public class WeidiApplication extends Application {
 
         HandlerUtils.init(Looper.getMainLooper());
         ThreadHandlerUtils.init();
-        EventBusUtils.init();
+        EventBusUtils.setContext(getApplicationContext());
 
         FragOperManager.getInstance();
 
