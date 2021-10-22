@@ -12,6 +12,7 @@ import android.util.Log;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -312,6 +313,10 @@ public class EventBusUtils {
                 new HashMap<String, WeakReference<Object>>();
         private static final HashMap<WeakReference<Object>, Method> mObjectMethodMap =
                 new HashMap<WeakReference<Object>, Method>();
+        // String保存的是类的全路径名,ArrayList<Message>保存的是发送到String所代表的类的消息
+        // 只保存有delayMillis的消息
+        private static final HashMap<String, ArrayList<Message>> mStringMessageMap =
+                new HashMap<String, ArrayList<Message>>();
         private volatile static Message sThreadMessage = null;
         private volatile static Message sUiMessage = null;
 
@@ -380,6 +385,7 @@ public class EventBusUtils {
             WeakReference<Object> reference = new WeakReference<>(object);
             mStringObjectMap.put(name, reference);
             mObjectMethodMap.put(reference, method);
+            mStringMessageMap.put(name, new ArrayList<Message>());
 
             Log.i(TAG,
                     "register()    after: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
@@ -434,6 +440,7 @@ public class EventBusUtils {
                     method = null;
                 }
             }
+
             Iterator<Map.Entry<String, WeakReference<Object>>> iter2 =
                     mStringObjectMap.entrySet().iterator();
             while (iter2.hasNext()) {
@@ -450,6 +457,21 @@ public class EventBusUtils {
                     reference = null;
                 }
             }
+
+            ArrayList<Message> list = mStringMessageMap.get(className);
+            if (list != null && !list.isEmpty()) {
+                Iterator<Message> iter = list.iterator();
+                while (iter.hasNext()) {
+                    Message msg = iter.next();
+                    mUiHandler.removeMessages(msg.what);
+                    mThreadHandler.removeMessages(msg.what);
+                    msg.obj = null;
+                    msg = null;
+                }
+                list.clear();
+            }
+            list = null;
+            mStringMessageMap.remove(className);
         }
 
         /***
@@ -566,8 +588,13 @@ public class EventBusUtils {
             if (delayMillis < 0) {
                 delayMillis = 0;
             }
+            Message msg = getUiMsg(className, what);
+            ArrayList<Message> list = mStringMessageMap.get(className);
+            if (list != null) {
+                list.add(msg);
+            }
             sendMsgAtTimeByUi(
-                    getUiMsg(className, what), SystemClock.uptimeMillis() + delayMillis, objArray);
+                    msg, SystemClock.uptimeMillis() + delayMillis, objArray);
             return null;
         }
 
@@ -575,24 +602,14 @@ public class EventBusUtils {
                              final int what,
                              long delayMillis,
                              final Object[] objArray) {
-            if (delayMillis < 0) {
-                delayMillis = 0;
-            }
-            sendMsgAtTimeByUi(
-                    getUiMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, objArray);
-            return null;
+            return postUiDelayed(clazz.getName(), what, delayMillis, objArray);
         }
 
         Object postUiDelayed(final Object object,
                              final int what,
                              long delayMillis,
                              final Object[] objArray) {
-            if (delayMillis < 0) {
-                delayMillis = 0;
-            }
-            sendMsgAtTimeByUi(
-                    getUiMsg(object, what), SystemClock.uptimeMillis() + delayMillis, objArray);
-            return null;
+            return postUiDelayed(object.getClass().getName(), what, delayMillis, objArray);
         }
 
         Object postThread(final Runnable r) {
@@ -651,9 +668,13 @@ public class EventBusUtils {
             if (delayMillis < 0) {
                 delayMillis = 0;
             }
+            Message msg = getThreadMsg(className, what);
+            ArrayList<Message> list = mStringMessageMap.get(className);
+            if (list != null) {
+                list.add(msg);
+            }
             sendMsgAtTimeByThread(
-                    getThreadMsg(className, what), SystemClock.uptimeMillis() + delayMillis,
-                    objArray);
+                    msg, SystemClock.uptimeMillis() + delayMillis, objArray);
             return null;
         }
 
@@ -661,24 +682,14 @@ public class EventBusUtils {
                                  final int what,
                                  long delayMillis,
                                  final Object[] objArray) {
-            if (delayMillis < 0) {
-                delayMillis = 0;
-            }
-            sendMsgAtTimeByThread(
-                    getThreadMsg(clazz, what), SystemClock.uptimeMillis() + delayMillis, objArray);
-            return null;
+            return postThreadDelayed(clazz.getName(), what, delayMillis, objArray);
         }
 
         Object postThreadDelayed(final Object object,
                                  final int what,
                                  long delayMillis,
                                  final Object[] objArray) {
-            if (delayMillis < 0) {
-                delayMillis = 0;
-            }
-            sendMsgAtTimeByThread(
-                    getThreadMsg(object, what), SystemClock.uptimeMillis() + delayMillis, objArray);
-            return null;
+            return postThreadDelayed(object.getClass().getName(), what, delayMillis, objArray);
         }
 
         void removeUiMessages(int what) {
@@ -913,7 +924,12 @@ public class EventBusUtils {
 
             Object[] objArray = mThreadMsgMap.get(msg);
             if (object instanceof String) {
-                dispatchEvent((String) msg.obj, msg.what, objArray);
+                String name = (String) msg.obj;
+                dispatchEvent(name, msg.what, objArray);
+                ArrayList<Message> list = mStringMessageMap.get(name);
+                if (list != null) {
+                    list.remove(msg);
+                }
             } else if (object instanceof Class) {
                 dispatchEvent((Class) msg.obj, msg.what, objArray);
             } else {
@@ -944,7 +960,12 @@ public class EventBusUtils {
 
             Object[] objArray = mUiMsgMap.get(msg);
             if (object instanceof String) {
-                dispatchEvent((String) msg.obj, msg.what, objArray);
+                String name = (String) msg.obj;
+                dispatchEvent(name, msg.what, objArray);
+                ArrayList<Message> list = mStringMessageMap.get(name);
+                if (list != null) {
+                    list.remove(msg);
+                }
             } else if (object instanceof Class) {
                 dispatchEvent((Class) msg.obj, msg.what, objArray);
             } else {
