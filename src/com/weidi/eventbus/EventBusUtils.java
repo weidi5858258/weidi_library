@@ -304,6 +304,10 @@ public class EventBusUtils {
         private Handler mUiHandler;
         private Context mContext;
 
+        // String保存的是类的全路径名,ArrayList<Message>保存的是发送到String所代表的类的消息
+        // 只保存有delayMillis的消息
+        private static final HashMap<String, ArrayList<Message>> mStringMessageMap =
+                new HashMap<String, ArrayList<Message>>();
         private static final HashMap<Message, Object[]> mThreadMsgMap =
                 new HashMap<Message, Object[]>();
         private static final HashMap<Message, Object[]> mUiMsgMap =
@@ -313,10 +317,6 @@ public class EventBusUtils {
                 new HashMap<String, WeakReference<Object>>();
         private static final HashMap<WeakReference<Object>, Method> mObjectMethodMap =
                 new HashMap<WeakReference<Object>, Method>();
-        // String保存的是类的全路径名,ArrayList<Message>保存的是发送到String所代表的类的消息
-        // 只保存有delayMillis的消息
-        private static final HashMap<String, ArrayList<Message>> mStringMessageMap =
-                new HashMap<String, ArrayList<Message>>();
         private volatile static Message sThreadMessage = null;
         private volatile static Message sUiMessage = null;
 
@@ -461,8 +461,26 @@ public class EventBusUtils {
             ArrayList<Message> list = mStringMessageMap.get(className);
             if (list != null && !list.isEmpty()) {
                 Iterator<Message> iter = list.iterator();
+                Object[] objects = null;
+                int length = 0;
                 while (iter.hasNext()) {
                     Message msg = iter.next();
+                    objects = mUiMsgMap.get(msg);
+                    if (objects != null) {
+                        length = objects.length;
+                        for (int i = 0; i < length; i++) {
+                            objects[i] = null;
+                        }
+                    }
+                    objects = mThreadMsgMap.get(msg);
+                    if (objects != null) {
+                        length = objects.length;
+                        for (int i = 0; i < length; i++) {
+                            objects[i] = null;
+                        }
+                    }
+                    mUiMsgMap.remove(msg);
+                    mThreadMsgMap.remove(msg);
                     mUiHandler.removeMessages(msg.what);
                     mThreadHandler.removeMessages(msg.what);
                     msg.obj = null;
