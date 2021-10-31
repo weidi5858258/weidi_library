@@ -731,6 +731,8 @@ public class EventBusUtils {
                     }
                 }
             }
+            // 其实还应该把mStringMessageMap中的msg也给移除掉的,但是因为没有类名找不到这个list,所以没法移除
+            // 不过在unregister的时候会找到这个list,然后移除掉所有的msg
             mUiHandler.removeMessages(what);
         }
 
@@ -873,6 +875,8 @@ public class EventBusUtils {
             if (reference == null) {
                 Log.e(TAG, "EventBus dispatchEvent() : reference is null");
                 // 说明在unregister时有关对象已经被移除掉了
+                mStringObjectMap.remove(className);
+                mObjectMethodMap.remove(null);
                 return null;
             }
             Object object = reference.get();
@@ -885,6 +889,8 @@ public class EventBusUtils {
             Method method = mObjectMethodMap.get(reference);
             if (method == null) {
                 Log.e(TAG, "EventBus dispatchEvent() : method is null");
+                mStringObjectMap.remove(className);
+                mObjectMethodMap.remove(reference);
                 return null;
             }
 
