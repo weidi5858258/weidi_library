@@ -10,7 +10,7 @@ import com.weidi.fragment.FragOperManager;
 import com.weidi.fragment.base.BaseFragment;
 import com.weidi.inject.InjectUtils;
 import com.weidi.library.R;
-import com.weidi.eventbus.EventBusUtils;
+import com.weidi.eventbus.Phone;
 import com.weidi.handler.HandlerUtils;
 
 import java.util.HashMap;
@@ -158,7 +158,7 @@ public abstract class BaseActivity
         for (String key : sFragmentBackTypeSMap.keySet()) {
             if (key.equals(fragmentName)) {
                 int type = sFragmentBackTypeSMap.get(key);
-                EventBusUtils.post(
+                Phone.call(
                         FragOperManager.class.getName(),
                         type,
                         new Object[]{this, mBaseFragment});

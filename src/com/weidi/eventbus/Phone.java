@@ -20,7 +20,7 @@ import java.util.Map;
 /*
 如何使用:
  1.先注册
-     EventBusUtils.register(Object object);
+     Phone.register(Object object);
  2.在已经注册过的类中加以下代码
      private Object onEvent(int what, Object[] objArray) {
          Object result = null;
@@ -33,9 +33,9 @@ import java.util.Map;
          }
          return result;
      }
- 3.调用不同的post...方法发送消息,最终调用到上面的方法
+ 3.调用不同的call...方法发送消息,最终调用到上面的方法
  4.反注册
-     EventBusUtils.unregister(Object object);
+     Phone.unregister(Object object);
 
 注意点:
  1. "String className"中的className必须是类的完整名称,如 "com.weidi.media.wdplayer.MainActivity"
@@ -51,7 +51,7 @@ import java.util.Map;
          "HelloWorld"
      }
  4. 最好不要发送what为0的消息.原因为:
-     像postUiDelayed(final Runnable r, long delayMillis)这种延时消息,
+     像callUiDelayed(final Runnable r, long delayMillis)这种延时消息,
      在没有执行之前想要移除掉的话,可以使用removeUiMessages(0)进行移除.
 
 优点:
@@ -63,15 +63,15 @@ import java.util.Map;
  "String className"匹配时不知道匹配哪一个对象,因此相同路径下的类只能保存一个对象.
 
 方法:(使用的api就只有12个,其他已经被注释起来了,减轻心里负担)
- post:              代码在原来的线程中(主线程或子线程)执行.
- postDelayed:       想把代码运行在原来线程中,并延时执行.
- postUi:            想把代码运行在主线程中.(一般在子线程中使用)
- postUiDelayed:     想把代码运行在主线程中,并延时执行.
- postThread:        想把代码运行在子线程中.(一般在主线程中使用)
- postThreadDelayed: 想把代码运行在子线程中,并延时执行.
+ call:              代码在原来的线程中(主线程或子线程)执行.
+ callDelayed:       想把代码运行在原来线程中,并延时执行.
+ callUi:            想把代码运行在主线程中.(一般在子线程中使用)
+ callUiDelayed:     想把代码运行在主线程中,并延时执行.
+ callThread:        想把代码运行在子线程中.(一般在主线程中使用)
+ callThreadDelayed: 想把代码运行在子线程中,并延时执行.
  */
 
-public class EventBusUtils {
+public class Phone {
 
     /*public static abstract class AAsyncResult implements Parcelable {
 
@@ -92,12 +92,12 @@ public class EventBusUtils {
         EventBus.getDefault();
     }*/
 
-    public static void register(Object object) {
-        EventBus.getDefault().register(object);
+    public static void register(Object phoneNumber) {
+        EventBus.getDefault().register(phoneNumber);
     }
 
-    public static void unregister(Object object) {
-        EventBus.getDefault().unregister(object);
+    public static void unregister(Object phoneNumber) {
+        EventBus.getDefault().unregister(phoneNumber);
     }
 
     public static void unregister(String className) {
@@ -111,7 +111,6 @@ public class EventBusUtils {
         EventBus.getDefault().onDestroy();
     }
 
-    // 在Application中设置
     public static void setContext(Context context) {
         EventBus.getDefault().setContext(context);
     }
@@ -135,13 +134,13 @@ public class EventBusUtils {
      @param what 消息标志
      @param objArray 传递的数据 传给onEvent(int what, Object[] objArray)的参数.
      */
-    public static Object post(final String className,
+    public static Object call(final String className,
                               final int what,
                               final Object[] objArray) {
         return EventBus.getDefault().post(className, what, objArray);
     }
 
-    public static Object postDelayed(final String className,
+    public static Object callDelayed(final String className,
                                      final int what,
                                      final long delayMillis,
                                      final Object[] objArray) {
@@ -152,7 +151,7 @@ public class EventBusUtils {
         }
     }
 
-    /*public static Object post(final Class clazz,
+    /*public static Object call(final Class clazz,
                               final int what,
                               final Object[] objArray) {
         return EventBus.getDefault().post(clazz, what, objArray);
@@ -161,12 +160,12 @@ public class EventBusUtils {
     /***
      能得到结果(代码可能在UI线程或者Thread线程)
      */
-    /*public static Object post(final Object object,
+    /*public static Object call(final Object object,
                               final int what,
                               final Object[] objArray) {
         return EventBus.getDefault().post(object, what, objArray);
     }*/
-    public static Object postUi(final Runnable r) {
+    public static Object callUi(final Runnable r) {
         return EventBus.getDefault().postUi(r);
     }
 
@@ -174,25 +173,25 @@ public class EventBusUtils {
      调用此方法是在UI线程时能得到结果,否则为null
      使用这个api
      */
-    public static Object postUi(final String className,
+    public static Object callUi(final String className,
                                 final int what,
                                 final Object[] objArray) {
         return EventBus.getDefault().postUi(className, what, objArray);
     }
 
-    /*public static Object postUi(final Class clazz,
+    /*public static Object callUi(final Class clazz,
                                 final int what,
                                 final Object[] objArray) {
         return EventBus.getDefault().postUi(clazz, what, objArray);
     }*/
 
-    /*public static Object postUi(final Object object,
+    /*public static Object callUi(final Object object,
                                 final int what,
                                 final Object[] objArray) {
         return EventBus.getDefault().postUi(object, what, objArray);
     }*/
 
-    public static Object postUiDelayed(final Runnable r, long delayMillis) {
+    public static Object callUiDelayed(final Runnable r, long delayMillis) {
         return EventBus.getDefault().postUiDelayed(r, delayMillis);
     }
 
@@ -200,28 +199,28 @@ public class EventBusUtils {
      返回结果为null
      使用这个api
      */
-    public static Object postUiDelayed(final String className,
+    public static Object callUiDelayed(final String className,
                                        final int what,
                                        long delayMillis,
                                        final Object[] objArray) {
         return EventBus.getDefault().postUiDelayed(className, what, delayMillis, objArray);
     }
 
-    /*public static Object postUiDelayed(final Class clazz,
+    /*public static Object callUiDelayed(final Class clazz,
                                        final int what,
                                        long delayMillis,
                                        final Object[] objArray) {
         return EventBus.getDefault().postUiDelayed(clazz, what, delayMillis, objArray);
     }*/
 
-    /*public static Object postUiDelayed(final Object object,
+    /*public static Object callUiDelayed(final Object object,
                                        final int what,
                                        long delayMillis,
                                        final Object[] objArray) {
         return EventBus.getDefault().postUiDelayed(object, what, delayMillis, objArray);
     }*/
 
-    public static Object postThread(final Runnable r) {
+    public static Object callThread(final Runnable r) {
         return EventBus.getDefault().postThread(r);
     }
 
@@ -229,25 +228,25 @@ public class EventBusUtils {
      调用此方法是在Thread线程时能得到结果,否则为null
      使用这个api
      */
-    public static Object postThread(final String className,
+    public static Object callThread(final String className,
                                     final int what,
                                     final Object[] objArray) {
         return EventBus.getDefault().postThread(className, what, objArray);
     }
 
-    /*public static Object postThread(final Class clazz,
+    /*public static Object callThread(final Class clazz,
                                     final int what,
                                     final Object[] objArray) {
         return EventBus.getDefault().postThread(clazz, what, objArray);
     }*/
 
-    /*public static Object postThread(final Object object,
+    /*public static Object callThread(final Object object,
                                     final int what,
                                     final Object[] objArray) {
         return EventBus.getDefault().postThread(object, what, objArray);
     }*/
 
-    public static Object postThreadDelayed(final Runnable r, long delayMillis) {
+    public static Object callThreadDelayed(final Runnable r, long delayMillis) {
         return EventBus.getDefault().postThreadDelayed(r, delayMillis);
     }
 
@@ -255,21 +254,21 @@ public class EventBusUtils {
      返回结果为null
      使用这个api
      */
-    public static Object postThreadDelayed(final String className,
+    public static Object callThreadDelayed(final String className,
                                            final int what,
                                            long delayMillis,
                                            final Object[] objArray) {
         return EventBus.getDefault().postThreadDelayed(className, what, delayMillis, objArray);
     }
 
-    /*public static Object postThreadDelayed(final Class clazz,
+    /*public static Object callThreadDelayed(final Class clazz,
                                            final int what,
                                            long delayMillis,
                                            final Object[] objArray) {
         return EventBus.getDefault().postThreadDelayed(clazz, what, delayMillis, objArray);
     }*/
 
-    /*public static Object postThreadDelayed(final Object object,
+    /*public static Object callThreadDelayed(final Object object,
                                            final int what,
                                            long delayMillis,
                                            final Object[] objArray) {
@@ -299,26 +298,26 @@ public class EventBusUtils {
         private static final String TAG =
                 EventBus.class.getSimpleName();
 
+        // String保存的是类的全路径名,ArrayList<Message>保存的是发送到String所代表的类的消息
+        // 只保存有delayMillis的消息
+        private static final HashMap<String, ArrayList<Message>> STRING_MESSAGE_MAP =
+                new HashMap<String, ArrayList<Message>>();
+        private static final HashMap<Message, Object[]> THREAD_MSG_MAP =
+                new HashMap<Message, Object[]>();
+        private static final HashMap<Message, Object[]> UI_MSG_MAP =
+                new HashMap<Message, Object[]>();
+        // String保存的是类的全路径名,如"com.weidi.media.wdplayer.MainActivity"
+        private static final HashMap<String, WeakReference<Object>> STRING_OBJECT_MAP =
+                new HashMap<String, WeakReference<Object>>();
+        private static final HashMap<WeakReference<Object>, Method> OBJECT_METHOD_MAP =
+                new HashMap<WeakReference<Object>, Method>();
+        private static volatile Message sThreadMessage = null;
+        private static volatile Message sUiMessage = null;
+
+        private Context mContext;
         private HandlerThread mHandlerThread;
         private Handler mThreadHandler;
         private Handler mUiHandler;
-        private Context mContext;
-
-        // String保存的是类的全路径名,ArrayList<Message>保存的是发送到String所代表的类的消息
-        // 只保存有delayMillis的消息
-        private static final HashMap<String, ArrayList<Message>> mStringMessageMap =
-                new HashMap<String, ArrayList<Message>>();
-        private static final HashMap<Message, Object[]> mThreadMsgMap =
-                new HashMap<Message, Object[]>();
-        private static final HashMap<Message, Object[]> mUiMsgMap =
-                new HashMap<Message, Object[]>();
-        // String保存的是类的全路径名,如"com.weidi.media.wdplayer.MainActivity"
-        private static final HashMap<String, WeakReference<Object>> mStringObjectMap =
-                new HashMap<String, WeakReference<Object>>();
-        private static final HashMap<WeakReference<Object>, Method> mObjectMethodMap =
-                new HashMap<WeakReference<Object>, Method>();
-        private volatile static Message sThreadMessage = null;
-        private volatile static Message sUiMessage = null;
 
         private static class InstanceHolder {
             private static EventBus sEventBus = new EventBus();
@@ -374,23 +373,23 @@ public class EventBusUtils {
             }
 
             Log.i(TAG,
-                    "register()   before: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+                    "register()   before: mObjectMethodMap.size(): " + (OBJECT_METHOD_MAP.size()));
             Log.i(TAG,
-                    "register()   before: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+                    "register()   before: mStringObjectMap.size(): " + (STRING_OBJECT_MAP.size()));
 
             // 防止相同类的不同对象被保存进去
             String name = clazz.getName();// 类的全路径名
             removeItem(name);
 
             WeakReference<Object> reference = new WeakReference<>(object);
-            mStringObjectMap.put(name, reference);
-            mObjectMethodMap.put(reference, method);
-            mStringMessageMap.put(name, new ArrayList<Message>());
+            STRING_OBJECT_MAP.put(name, reference);
+            OBJECT_METHOD_MAP.put(reference, method);
+            STRING_MESSAGE_MAP.put(name, new ArrayList<Message>());
 
             Log.i(TAG,
-                    "register()    after: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+                    "register()    after: mObjectMethodMap.size(): " + (OBJECT_METHOD_MAP.size()));
             Log.i(TAG,
-                    "register()    after: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+                    "register()    after: mStringObjectMap.size(): " + (STRING_OBJECT_MAP.size()));
         }
 
         synchronized void unregister(Object object) {
@@ -409,9 +408,9 @@ public class EventBusUtils {
             }
 
             Log.i(TAG,
-                    "unregister() before: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+                    "unregister() before: mObjectMethodMap.size(): " + (OBJECT_METHOD_MAP.size()));
             Log.i(TAG,
-                    "unregister() before: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+                    "unregister() before: mStringObjectMap.size(): " + (STRING_OBJECT_MAP.size()));
 
             removeItem(className);
             // 会把当前类和其他类提交的Runnable延时任务都给取消掉的
@@ -419,14 +418,14 @@ public class EventBusUtils {
             mThreadHandler.removeMessages(0);
 
             Log.i(TAG,
-                    "unregister()  after: mObjectMethodMap.size(): " + (mObjectMethodMap.size()));
+                    "unregister()  after: mObjectMethodMap.size(): " + (OBJECT_METHOD_MAP.size()));
             Log.i(TAG,
-                    "unregister()  after: mStringObjectMap.size(): " + (mStringObjectMap.size()));
+                    "unregister()  after: mStringObjectMap.size(): " + (STRING_OBJECT_MAP.size()));
         }
 
         private void removeItem(String className) {
             Iterator<Map.Entry<WeakReference<Object>, Method>> iter1 =
-                    mObjectMethodMap.entrySet().iterator();
+                    OBJECT_METHOD_MAP.entrySet().iterator();
             while (iter1.hasNext()) {
                 Map.Entry<WeakReference<Object>, Method> entry = (Map.Entry) iter1.next();
                 WeakReference<Object> reference = entry.getKey();
@@ -442,7 +441,7 @@ public class EventBusUtils {
             }
 
             Iterator<Map.Entry<String, WeakReference<Object>>> iter2 =
-                    mStringObjectMap.entrySet().iterator();
+                    STRING_OBJECT_MAP.entrySet().iterator();
             while (iter2.hasNext()) {
                 Map.Entry<String, WeakReference<Object>> entry = (Map.Entry) iter2.next();
                 String name = entry.getKey();
@@ -458,29 +457,29 @@ public class EventBusUtils {
                 }
             }
 
-            ArrayList<Message> list = mStringMessageMap.get(className);
+            ArrayList<Message> list = STRING_MESSAGE_MAP.get(className);
             if (list != null && !list.isEmpty()) {
                 Iterator<Message> iter = list.iterator();
                 Object[] objects = null;
                 int length = 0;
                 while (iter.hasNext()) {
                     Message msg = iter.next();
-                    objects = mUiMsgMap.get(msg);
+                    objects = UI_MSG_MAP.get(msg);
                     if (objects != null) {
                         length = objects.length;
                         for (int i = 0; i < length; i++) {
                             objects[i] = null;
                         }
                     }
-                    objects = mThreadMsgMap.get(msg);
+                    objects = THREAD_MSG_MAP.get(msg);
                     if (objects != null) {
                         length = objects.length;
                         for (int i = 0; i < length; i++) {
                             objects[i] = null;
                         }
                     }
-                    mUiMsgMap.remove(msg);
-                    mThreadMsgMap.remove(msg);
+                    UI_MSG_MAP.remove(msg);
+                    THREAD_MSG_MAP.remove(msg);
                     mUiHandler.removeMessages(msg.what);
                     mThreadHandler.removeMessages(msg.what);
                     msg.obj = null;
@@ -489,7 +488,7 @@ public class EventBusUtils {
                 list.clear();
             }
             list = null;
-            mStringMessageMap.remove(className);
+            STRING_MESSAGE_MAP.remove(className);
         }
 
         /***
@@ -508,7 +507,7 @@ public class EventBusUtils {
         }
 
         void setContext(Context context) {
-            mContext = context;
+            mContext = context.getApplicationContext();
         }
 
         Context getContext() {
@@ -607,7 +606,7 @@ public class EventBusUtils {
                 delayMillis = 0;
             }
             Message msg = getUiMsg(className, what);
-            ArrayList<Message> list = mStringMessageMap.get(className);
+            ArrayList<Message> list = STRING_MESSAGE_MAP.get(className);
             if (list != null) {
                 list.add(msg);
             }
@@ -687,7 +686,7 @@ public class EventBusUtils {
                 delayMillis = 0;
             }
             Message msg = getThreadMsg(className, what);
-            ArrayList<Message> list = mStringMessageMap.get(className);
+            ArrayList<Message> list = STRING_MESSAGE_MAP.get(className);
             if (list != null) {
                 list.add(msg);
             }
@@ -711,9 +710,9 @@ public class EventBusUtils {
         }
 
         void removeUiMessages(int what) {
-            if (!mUiMsgMap.isEmpty()) {
-                synchronized (mUiMsgMap) {
-                    Iterator<Map.Entry<Message, Object[]>> iter = mUiMsgMap.entrySet().iterator();
+            if (!UI_MSG_MAP.isEmpty()) {
+                synchronized (UI_MSG_MAP) {
+                    Iterator<Map.Entry<Message, Object[]>> iter = UI_MSG_MAP.entrySet().iterator();
                     while (iter.hasNext()) {
                         Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
                         Message msg = entry.getKey();
@@ -737,10 +736,10 @@ public class EventBusUtils {
         }
 
         void removeThreadMessages(int what) {
-            if (!mThreadMsgMap.isEmpty()) {
-                synchronized (mThreadMsgMap) {
+            if (!THREAD_MSG_MAP.isEmpty()) {
+                synchronized (THREAD_MSG_MAP) {
                     Iterator<Map.Entry<Message, Object[]>> iter =
-                            mThreadMsgMap.entrySet().iterator();
+                            THREAD_MSG_MAP.entrySet().iterator();
                     while (iter.hasNext()) {
                         Map.Entry<Message, Object[]> entry = (Map.Entry) iter.next();
                         Message msg = entry.getKey();
@@ -829,8 +828,8 @@ public class EventBusUtils {
                                                     final long uptimeMillis,
                                                     final Object[] objArray) {
             if (objArray != null) {
-                synchronized (mThreadMsgMap) {
-                    mThreadMsgMap.put(msg, objArray);
+                synchronized (THREAD_MSG_MAP) {
+                    THREAD_MSG_MAP.put(msg, objArray);
                 }
             }
             return mThreadHandler.sendMessageAtTime(msg, uptimeMillis);
@@ -840,22 +839,22 @@ public class EventBusUtils {
                                                 final long uptimeMillis,
                                                 final Object[] objArray) {
             if (objArray != null) {
-                synchronized (mUiMsgMap) {
-                    mUiMsgMap.put(msg, objArray);
+                synchronized (UI_MSG_MAP) {
+                    UI_MSG_MAP.put(msg, objArray);
                 }
             }
             return mUiHandler.sendMessageAtTime(msg, uptimeMillis);
         }
 
         void clear() {
-            if (mStringObjectMap != null) {
-                synchronized (mStringObjectMap) {
-                    mStringObjectMap.clear();
+            if (STRING_OBJECT_MAP != null) {
+                synchronized (STRING_OBJECT_MAP) {
+                    STRING_OBJECT_MAP.clear();
                 }
             }
-            if (mObjectMethodMap != null) {
-                synchronized (mObjectMethodMap) {
-                    mObjectMethodMap.clear();
+            if (OBJECT_METHOD_MAP != null) {
+                synchronized (OBJECT_METHOD_MAP) {
+                    OBJECT_METHOD_MAP.clear();
                 }
             }
         }
@@ -871,26 +870,26 @@ public class EventBusUtils {
                 Log.e(TAG, "EventBus dispatchEvent() : className is empty");
                 return null;
             }
-            WeakReference<Object> reference = mStringObjectMap.get(className);
+            WeakReference<Object> reference = STRING_OBJECT_MAP.get(className);
             if (reference == null) {
                 Log.e(TAG, "EventBus dispatchEvent() : reference is null");
                 // 说明在unregister时有关对象已经被移除掉了
-                mStringObjectMap.remove(className);
-                mObjectMethodMap.remove(null);
+                STRING_OBJECT_MAP.remove(className);
+                OBJECT_METHOD_MAP.remove(null);
                 return null;
             }
             Object object = reference.get();
             if (object == null) {
                 Log.e(TAG, "EventBus dispatchEvent() : object is null");
-                mStringObjectMap.remove(className);
-                mObjectMethodMap.remove(reference);
+                STRING_OBJECT_MAP.remove(className);
+                OBJECT_METHOD_MAP.remove(reference);
                 return null;
             }
-            Method method = mObjectMethodMap.get(reference);
+            Method method = OBJECT_METHOD_MAP.get(reference);
             if (method == null) {
                 Log.e(TAG, "EventBus dispatchEvent() : method is null");
-                mStringObjectMap.remove(className);
-                mObjectMethodMap.remove(reference);
+                STRING_OBJECT_MAP.remove(className);
+                OBJECT_METHOD_MAP.remove(reference);
                 return null;
             }
 
@@ -946,11 +945,11 @@ public class EventBusUtils {
                 return;
             }
 
-            Object[] objArray = mThreadMsgMap.get(msg);
+            Object[] objArray = THREAD_MSG_MAP.get(msg);
             if (object instanceof String) {
                 String name = (String) msg.obj;
                 dispatchEvent(name, msg.what, objArray);
-                ArrayList<Message> list = mStringMessageMap.get(name);
+                ArrayList<Message> list = STRING_MESSAGE_MAP.get(name);
                 if (list != null) {
                     list.remove(msg);
                 }
@@ -960,8 +959,8 @@ public class EventBusUtils {
                 dispatchEvent(msg.obj, msg.what, objArray);
             }
 
-            synchronized (mThreadMsgMap) {
-                mThreadMsgMap.remove(msg);
+            synchronized (THREAD_MSG_MAP) {
+                THREAD_MSG_MAP.remove(msg);
                 if (objArray != null) {
                     for (Object obj : objArray) {
                         obj = null;
@@ -982,11 +981,11 @@ public class EventBusUtils {
                 return;
             }
 
-            Object[] objArray = mUiMsgMap.get(msg);
+            Object[] objArray = UI_MSG_MAP.get(msg);
             if (object instanceof String) {
                 String name = (String) msg.obj;
                 dispatchEvent(name, msg.what, objArray);
-                ArrayList<Message> list = mStringMessageMap.get(name);
+                ArrayList<Message> list = STRING_MESSAGE_MAP.get(name);
                 if (list != null) {
                     list.remove(msg);
                 }
@@ -996,8 +995,8 @@ public class EventBusUtils {
                 dispatchEvent(msg.obj, msg.what, objArray);
             }
 
-            synchronized (mUiMsgMap) {
-                mUiMsgMap.remove(msg);
+            synchronized (UI_MSG_MAP) {
+                UI_MSG_MAP.remove(msg);
                 if (objArray != null) {
                     for (Object obj : objArray) {
                         obj = null;

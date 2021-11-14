@@ -7,7 +7,7 @@ import android.app.FragmentTransaction;
 import android.text.TextUtils;
 
 import com.weidi.library.R;
-import com.weidi.eventbus.EventBusUtils;
+import com.weidi.eventbus.Phone;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class FragOperManager implements Serializable {
     private List<Fragment> mFragmentsList;
 
     private FragOperManager() {
-        EventBusUtils.register(this);
+        Phone.register(this);
         this.mMapList = new ArrayList<Map<Activity, Integer>>();
         this.mFragmentsList = new ArrayList<Fragment>();
     }
@@ -133,7 +133,7 @@ public class FragOperManager implements Serializable {
      * 不需要调用
      */
     public void onDestroy() {
-        EventBusUtils.unregister(this);
+        Phone.unregister(this);
     }
 
     /**

@@ -4,13 +4,10 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
-import com.weidi.dbutil.DbUtils;
-import com.weidi.dbutil.SimpleDao;
-import com.weidi.dbutil.Test;
 import com.weidi.fragment.FragOperManager;
 import com.weidi.handler.ThreadHandlerUtils;
 import com.weidi.log.MLog;
-import com.weidi.eventbus.EventBusUtils;
+import com.weidi.eventbus.Phone;
 import com.weidi.handler.HandlerUtils;
 import com.weidi.utils.MyToast;
 import com.weidi.wifi.WifiUtils;
@@ -38,7 +35,7 @@ public class WeidiApplication extends Application {
 
         HandlerUtils.init(Looper.getMainLooper());
         ThreadHandlerUtils.init();
-        EventBusUtils.setContext(getApplicationContext());
+        Phone.setContext(getApplicationContext());
 
         FragOperManager.getInstance();
 
